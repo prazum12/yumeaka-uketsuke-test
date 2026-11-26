@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=18">
-<script src="log.js?v=2"></script>
+<link rel="stylesheet" href="ui.css?v=20">
+<script src="log.js?v=3"></script>
 <style>
 body{padding-bottom:24px}
 .hello{font-family:var(--round);font-weight:900;font-size:24px;margin:10px 2px 0}
@@ -53,6 +53,7 @@ body{padding-bottom:24px}
 <p class="hello" id="who"></p>
 <div class="loading" id="load"><span class="ring"></span>予約のようすを確かめています</div>
 <div id="msg" class="note hide"></div>
+<div id="ask" class="card ask hide" role="alertdialog" aria-label="時間を変える確認"></div>
 <div id="cal" class="card cal hide" aria-label="活動日のカレンダー"></div>
 <div id="days"><div class="sk tk"><b></b><div><i class="h"></i><i class="w80"></i><i class="block"></i></div></div><div class="sk tk"><b></b><div><i class="h"></i><i class="w80"></i><i class="block"></i></div></div></div>
 <small class="foot">このページのアドレスは、あなた専用です。ほかの人には教えないでください。</small>
@@ -101,6 +102,11 @@ $('load').className='loading hide';
 if(!r.ok){$('who').textContent='';$('days').textContent='';msg(r.message||'このリンクは使えません。','ng');return}
 $('who').textContent=r.name+' さん';$('who').appendChild(el('small','','No. '+r.no));msg(r.message,r.cls);
 drawCal(r.days);
+var ak=$('ask');ak.textContent='';ak.className='card ask hide';
+if(r.confirm){ak.className='card ask';ak.appendChild(el('p','',r.confirm.message));
+var y=el('button','btn','時間を変えて参加する');y.onclick=function(){call({op:'joinLecture',lecture:r.confirm.lecture,confirm:'1'})};
+var n=el('button','btn quiet','やめておく');n.onclick=function(){ak.textContent='';ak.className='card ask hide';msg('講義の参加予約は、していません。','out')};
+ak.appendChild(y);ak.appendChild(n);setTimeout(function(){ak.scrollIntoView({behavior:'smooth',block:'center'});y.focus()},50)}
 var box=$('days');box.textContent='';
 if(!r.days.length){box.appendChild(el('div','card','いま予約できる活動日はありません。'))}
 r.days.forEach(function(d){
@@ -127,6 +133,16 @@ var B=stepper('帰る時刻',toMin(d.lea),lo+30,hi,function(){if(B.v<=A.v){A.v=M
 var steps=el('div','steps');steps.appendChild(A.el);steps.appendChild(B.el);b.appendChild(steps);
 go.onclick=function(){call({op:'reserve',day:d.id,arr:toHM(A.v),lea:toHM(B.v)})};b.appendChild(go);
 if(d.reserved){go.className='btn hide';var x=el('button','btn quiet','行けなくなったので取り消す');x.onclick=function(){call({op:'cancel',day:d.id})};b.appendChild(x)}
+// この日の講義：来る予約をした人は、出たい講義に参加の予約ができる
+if(d.lectures&&d.lectures.length){var lb=el('div','lecs');lb.appendChild(el('div','lechead','この日の講義'));
+d.lectures.forEach(function(l){var row=el('div','lec'+(l.joined?' on':''));var lx=el('div','lectx');lx.appendChild(el('b','',l.title));
+lx.appendChild(el('span','',l.start+'〜'+l.end+(l.by?'　担当：'+l.by:'')));lx.appendChild(el('span','n',l.joined?'参加の予約ずみ（いま'+l.count+'人）':'いま'+l.count+'人が参加'));
+if(l.detail){var ld=el('details','more');ld.appendChild(el('summary','','くわしく見る'));ld.appendChild(el('p','',l.detail));lx.appendChild(ld)}
+row.appendChild(lx);
+if(d.reserved){var lbtn=el('button','lecbtn'+(l.joined?' quiet':''),l.joined?'参加をやめる':'参加する');lbtn.onclick=function(){call({op:l.joined?'leaveLecture':'joinLecture',lecture:l.id})};row.appendChild(lbtn)}
+lb.appendChild(row)});
+if(!d.reserved)lb.appendChild(el('small','lecnote','この日に行く予約をすると、講義に参加できます。'));
+b.appendChild(lb)}
 t.appendChild(b);box.appendChild(t)})}
 if(!key){$('load').className='loading hide';$('days').textContent='';msg('このページは、あなた専用のリンクから開いてください。','ng')}else call({op:'view'});
 })();

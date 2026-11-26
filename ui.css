@@ -197,3 +197,19 @@ button.cald{cursor:pointer}
 .more summary:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
 .more p{margin:0 0 12px;white-space:pre-wrap;line-height:1.8}
 .cald small{max-width:100%;overflow:hidden;text-overflow:clip}
+
+/* 予約票：この日の講義 */
+.lecs{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.lechead{font-size:13px;font-weight:700;color:var(--ink-2);margin-bottom:6px}
+.lec{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+.lec:first-of-type{border-top:0}
+.lectx{min-width:0;flex:1}
+.lectx b{display:block;overflow-wrap:anywhere;line-height:1.5}
+.lectx span{display:block;font-size:13px;color:var(--ink-2);line-height:1.6}
+.lec.on .lectx span.n{color:var(--member);font-weight:700}
+.lecbtn{align-self:stretch;min-height:44px;padding:8px 14px;border-radius:10px;border:0;background:var(--brand);color:#fff;font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.lecbtn.quiet{background:transparent;color:var(--ink-2);border:2px solid var(--line)}
+.lecbtn:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+.lecnote{display:block;color:var(--ink-2);margin-top:6px}
+.ask{border:2px solid var(--sky)}
+.ask p{white-space:pre-wrap;line-height:1.8;margin:0 0 8px}
