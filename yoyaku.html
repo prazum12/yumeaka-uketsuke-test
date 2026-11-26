@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=17">
+<link rel="stylesheet" href="ui.css?v=18">
 <script src="log.js?v=2"></script>
 <style>
 body{padding-bottom:24px}
@@ -90,7 +90,7 @@ var first=new Date(Date.UTC(y,m-1,1)).getUTCDay(),last=new Date(Date.UTC(y,m,0))
 for(var i=0;i<first;i++)g.appendChild(el('span','cald none'));
 for(var dd=1;dd<=last;dd++){(function(dd){var id=calYM+'-'+('0'+dd).slice(-2);var hit=null;calDays.forEach(function(d){if(d.id===id)hit=d});
 var cell=el(hit?'button':'span','cald'+(hit?(hit.reserved?' booked':' open'):'')+(id===now?' today':''));cell.appendChild(el('i','',String(dd)));
-if(hit){cell.appendChild(el('small','',hit.reserved?'予約ずみ':'活動日'));cell.setAttribute('aria-label',m+'月'+dd+'日 '+(hit.reserved?'予約ずみ':'活動日。まだ予約していません'));
+if(hit){cell.appendChild(el('small','',hit.reserved?'予約ずみ':(hit.title||'活動日').slice(0,5)));cell.setAttribute('aria-label',m+'月'+dd+'日 '+(hit.reserved?'予約ずみ':'活動日。まだ予約していません'));
 cell.onclick=function(){var t=document.getElementById('day-'+id);if(t){t.scrollIntoView({behavior:'smooth',block:'center'});t.classList.add('flash');setTimeout(function(){t.classList.remove('flash')},1200)}}}
 g.appendChild(cell)})(dd)}
 c.appendChild(g);
@@ -109,9 +109,12 @@ var t=el('div','ticket'+(d.reserved?' booked':''));t.id='day-'+d.id;
 var s=el('div','stub');s.appendChild(el('div','mo',(+p[1])+'月'));s.appendChild(el('div','dd',String(+p[2])));s.appendChild(el('div','wd',wd+'曜日'));t.appendChild(s);
 var b=el('div','tbody');
 var st=el('div','state');var tx=el('div');
-if(d.reserved){tx.appendChild(el('div','lab','予約票'));tx.appendChild(el('div','big',d.arr+'〜'+d.lea));st.appendChild(tx);st.appendChild(el('div','stamp mini','予約済'))}
-else{tx.appendChild(el('div','lab','まだ予約していません'));tx.appendChild(el('div','big','行く？'));st.appendChild(tx)}
+var ttl=d.title||'活動日';
+if(d.reserved){tx.appendChild(el('div','lab','予約票　'+ttl));tx.appendChild(el('div','big',d.arr+'〜'+d.lea));st.appendChild(tx);st.appendChild(el('div','stamp mini','予約済'))}
+else{tx.appendChild(el('div','lab','まだ予約していません'));tx.appendChild(el('div','big ttl',ttl));st.appendChild(tx)}
 b.appendChild(st);
+// 講義の詳細が登録してあれば、開いて読める
+if(d.detail){var dt=el('details','more');dt.appendChild(el('summary','','くわしく見る'));var dp=el('p','',d.detail);dt.appendChild(dp);b.appendChild(dt)}
 var seats=el('div','seats');for(var i=0;i<10;i++){seats.appendChild(el('i',i<d.seats?'f':''))}
 seats.appendChild(el('span','','いま '+d.seats+'人が予約'+(d.seats>10?'（10人をこえています）':'')));b.appendChild(seats);
 b.appendChild(el('div','meta','開いている時間 '+d.open+'〜'+d.close+'　みんながそろう時間 '+d.core));

@@ -189,3 +189,11 @@ button.cald{cursor:pointer}
 .callegend .k.today{border:0;border-bottom:2px solid var(--ink);border-radius:0;height:10px}
 .ticket.flash{box-shadow:0 0 0 3px var(--sky)}
 @media (prefers-reduced-motion:no-preference){.ticket{transition:box-shadow .2s ease-out}}
+
+/* 予約票：講義名と、くわしい説明 */
+.ticket .big.ttl{overflow-wrap:anywhere}
+.more{margin:8px 0 10px;border:1px solid var(--line);border-radius:8px;padding:0 12px;background:var(--bg)}
+.more summary{cursor:pointer;padding:10px 0;font-weight:700;color:var(--brand);min-height:24px}
+.more summary:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+.more p{margin:0 0 12px;white-space:pre-wrap;line-height:1.8}
+.cald small{max-width:100%;overflow:hidden;text-overflow:clip}
