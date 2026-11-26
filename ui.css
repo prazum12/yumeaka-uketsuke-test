@@ -164,3 +164,28 @@ body{font-weight:500}
 /* 登録の状況：せまい画面では、名前の下に札を並べる */
 .tag{white-space:nowrap}
 @media (max-width:560px){.ptab tr{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:10px 0;border-top:1px solid var(--line)}.ptab td{border-top:0;padding:0}.ptab td:first-child{flex:1 1 100%}}
+
+/* 予約のページのカレンダー */
+.cal{padding:12px 12px 10px}
+.calhead{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}
+.calhead b{font-size:17px}
+.calnav{width:44px;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-size:22px;line-height:1;color:var(--ink);cursor:pointer}
+.calnav:focus-visible,.cald:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.calw{text-align:center;font-size:12px;color:var(--ink-2);padding:2px 0}
+.calw.sun{color:#b3261e}.calw.sat{color:var(--brand)}
+.cald{min-height:50px;border-radius:8px;border:1px solid transparent;background:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:5px 0 3px;font:inherit;color:var(--ink-2)}
+.cald i{font-style:normal;font-size:15px;line-height:1.2;font-variant-numeric:tabular-nums}
+.cald small{font-size:10px;line-height:1.2;margin-top:3px;font-weight:700;white-space:nowrap}
+button.cald{cursor:pointer}
+.cald.open{border-color:var(--sky);background:#fff;color:var(--ink)}
+.cald.open small{color:var(--brand)}
+.cald.booked{background:var(--member);border-color:var(--member);color:#fff}
+.cald.today i{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:700}
+.callegend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--ink-2)}
+.callegend span{display:inline-flex;align-items:center;gap:5px}
+.callegend .k{width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid var(--line)}
+.callegend .k.open{border-color:var(--sky);background:#fff}.callegend .k.booked{background:var(--member);border-color:var(--member)}
+.callegend .k.today{border:0;border-bottom:2px solid var(--ink);border-radius:0;height:10px}
+.ticket.flash{box-shadow:0 0 0 3px var(--sky)}
+@media (prefers-reduced-motion:no-preference){.ticket{transition:box-shadow .2s ease-out}}

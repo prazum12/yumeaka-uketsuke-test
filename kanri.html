@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=16">
-<script src="log.js?v=1"></script>
+<link rel="stylesheet" href="ui.css?v=17">
+<script src="log.js?v=2"></script>
 </head>
 <body>
 <header class="band"><div class="band-in">
@@ -116,7 +116,7 @@ c.appendChild(t);c.appendChild(el('small','','新しい端末の登録は、Disc
 // 検証用の環境だけの道具：操作の記録を見る、環境をはじめの状態に戻す
 var tc=el('div','card');tc.appendChild(el('h2','','テストの道具'));
 var lg=el('a','','操作の記録（操作ログ）を開く');lg.href=r.sheetUrl+'#gid=927863012';lg.target='_blank';lg.rel='noopener';var lp=el('p');lp.appendChild(lg);tc.appendChild(lp);
-tc.appendChild(el('p','','環境をリセットすると、予約・入退室・顔写真・テストの参加者・この端末以外の受付の端末を消し、活動日を「今日・明日・1週間後」で作り直します。操作の記録は消えません。'));
+tc.appendChild(el('p','','環境をリセットすると、予約・入退室・顔写真・テストの参加者・この端末以外の受付の端末を消し、活動日を「今日（テスト用）と、今年度の残りの講習日」で作り直します。操作の記録は消えません。'));
 var rb=el('button','act warn','環境をリセットする');rb.onclick=function(){if(rb.dataset.sure){delete rb.dataset.sure;rb.textContent='環境をリセットする';resetAll()}else{rb.dataset.sure='1';rb.textContent='本当にリセットする（もう一度押す）';setTimeout(function(){delete rb.dataset.sure;rb.textContent='環境をリセットする'},4000)}};
 tc.appendChild(rb);var rs=el('small','','終わるまで20秒ほどかかります。Discordの予約の投稿も、新しいものに入れ替わります。');rs.style.display='block';rs.style.marginTop='8px';tc.appendChild(rs);V.appendChild(tc)}
 }

@@ -10,7 +10,7 @@ var SRC={'index.html':'受付の画面','kanri.html':'運営の画面','my.html'
 var who='';
 function dev(){try{var m=JSON.parse(localStorage.getItem('yumeaka_uketsuke_v1')||'null');return m&&m.name?m.name+'（'+m.device+'）':''}catch(e){return ''}}
 var F=window.fetch?window.fetch.bind(window):null;
-function send(op,res,msg){try{var b=new URLSearchParams();b.set('src',SRC);b.set('who',who||dev());b.set('op',String(op).slice(0,50));b.set('res',res);b.set('msg',String(msg||'').slice(0,300));b.set('ua',(navigator.userAgent||'').slice(0,140));
+function send(op,res,msg){try{var b=new URLSearchParams();b.set('src',SRC);b.set('who',who||((page==='index.html'||page==='kanri.html'||page==='')?dev():''));b.set('op',String(op).slice(0,50));b.set('res',res);b.set('msg',String(msg||'').slice(0,300));b.set('ua',(navigator.userAgent||'').slice(0,140));
 if(navigator.sendBeacon){navigator.sendBeacon(LOG,b)}else if(F){F(LOG,{method:'POST',body:b,keepalive:true}).catch(function(){})}}catch(e){}}
 if(F){window.fetch=function(u,o){var p=F(u,o);try{
 if(typeof u==='string'&&u.indexOf('/webhook/yumeaka-yoyaku-')>0&&u!==LOG&&o&&o.body&&o.body.get){

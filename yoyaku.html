@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=16">
-<script src="log.js?v=1"></script>
+<link rel="stylesheet" href="ui.css?v=17">
+<script src="log.js?v=2"></script>
 <style>
 body{padding-bottom:24px}
 .hello{font-family:var(--round);font-weight:900;font-size:24px;margin:10px 2px 0}
@@ -53,6 +53,7 @@ body{padding-bottom:24px}
 <p class="hello" id="who"></p>
 <div class="loading" id="load"><span class="ring"></span>予約のようすを確かめています</div>
 <div id="msg" class="note hide"></div>
+<div id="cal" class="card cal hide" aria-label="活動日のカレンダー"></div>
 <div id="days"><div class="sk tk"><b></b><div><i class="h"></i><i class="w80"></i><i class="block"></i></div></div><div class="sk tk"><b></b><div><i class="h"></i><i class="w80"></i><i class="block"></i></div></div></div>
 <small class="foot">このページのアドレスは、あなた専用です。ほかの人には教えないでください。</small>
 </main>
@@ -74,15 +75,37 @@ var a=el('button','','−'),v=el('div','val',toHM(val)),b=el('button','','＋');
 var st={v:val,min:min,max:max,set:function(){v.textContent=toHM(st.v);a.disabled=st.v<=st.min;b.disabled=st.v>=st.max}};
 a.onclick=function(){if(st.v>st.min){st.v-=30;st.set();onchange()}};b.onclick=function(){if(st.v<st.max){st.v+=30;st.set();onchange()}};
 row.appendChild(a);row.appendChild(v);row.appendChild(b);w.appendChild(row);st.el=w;st.set();return st}
+// カレンダー：活動日と、自分が予約した日を月ごとに見せる。日を押すと、その日の予約の場所へ動く
+var calYM=null,calDays=[];
+function drawCal(days){calDays=days||[];var c=$('cal');if(!calDays.length){c.className='card cal hide';return}
+var now=new Date(Date.now()+9*3600*1000).toISOString().slice(0,10);
+if(!calYM){var f=calDays.map(function(d){return d.id}).sort()[0]||now;calYM=(f<now?now:f).slice(0,7);if(calDays.some(function(d){return d.id.slice(0,7)===now.slice(0,7)}))calYM=now.slice(0,7)}
+var y=+calYM.slice(0,4),m=+calYM.slice(5,7);c.className='card cal';c.textContent='';
+var head=el('div','calhead');var pv=el('button','calnav','‹');pv.setAttribute('aria-label','前の月');var nx=el('button','calnav','›');nx.setAttribute('aria-label','次の月');
+function move(n){var d=new Date(Date.UTC(y,m-1+n,1));calYM=d.toISOString().slice(0,7);drawCal(calDays)}
+pv.onclick=function(){move(-1)};nx.onclick=function(){move(1)};
+head.appendChild(pv);head.appendChild(el('b','',y+'年'+m+'月'));head.appendChild(nx);c.appendChild(head);
+var g=el('div','calgrid');['日','月','火','水','木','金','土'].forEach(function(w,i){g.appendChild(el('span','calw'+(i===0?' sun':i===6?' sat':''),w))});
+var first=new Date(Date.UTC(y,m-1,1)).getUTCDay(),last=new Date(Date.UTC(y,m,0)).getUTCDate();
+for(var i=0;i<first;i++)g.appendChild(el('span','cald none'));
+for(var dd=1;dd<=last;dd++){(function(dd){var id=calYM+'-'+('0'+dd).slice(-2);var hit=null;calDays.forEach(function(d){if(d.id===id)hit=d});
+var cell=el(hit?'button':'span','cald'+(hit?(hit.reserved?' booked':' open'):'')+(id===now?' today':''));cell.appendChild(el('i','',String(dd)));
+if(hit){cell.appendChild(el('small','',hit.reserved?'予約ずみ':'活動日'));cell.setAttribute('aria-label',m+'月'+dd+'日 '+(hit.reserved?'予約ずみ':'活動日。まだ予約していません'));
+cell.onclick=function(){var t=document.getElementById('day-'+id);if(t){t.scrollIntoView({behavior:'smooth',block:'center'});t.classList.add('flash');setTimeout(function(){t.classList.remove('flash')},1200)}}}
+g.appendChild(cell)})(dd)}
+c.appendChild(g);
+var lg=el('div','callegend');var a=el('span','');a.appendChild(el('i','k open'));a.appendChild(document.createTextNode('活動日'));var b=el('span','');b.appendChild(el('i','k booked'));b.appendChild(document.createTextNode('予約ずみ'));var t2=el('span','');t2.appendChild(el('i','k today'));t2.appendChild(document.createTextNode('今日'));
+lg.appendChild(a);lg.appendChild(b);lg.appendChild(t2);c.appendChild(lg)}
 function render(r){
 $('load').className='loading hide';
 if(!r.ok){$('who').textContent='';$('days').textContent='';msg(r.message||'このリンクは使えません。','ng');return}
 $('who').textContent=r.name+' さん';$('who').appendChild(el('small','','No. '+r.no));msg(r.message,r.cls);
+drawCal(r.days);
 var box=$('days');box.textContent='';
 if(!r.days.length){box.appendChild(el('div','card','いま予約できる活動日はありません。'))}
 r.days.forEach(function(d){
 var p=d.id.split('-');var wd=(/（(.)）/.exec(d.label)||[])[1]||'';
-var t=el('div','ticket'+(d.reserved?' booked':''));
+var t=el('div','ticket'+(d.reserved?' booked':''));t.id='day-'+d.id;
 var s=el('div','stub');s.appendChild(el('div','mo',(+p[1])+'月'));s.appendChild(el('div','dd',String(+p[2])));s.appendChild(el('div','wd',wd+'曜日'));t.appendChild(s);
 var b=el('div','tbody');
 var st=el('div','state');var tx=el('div');
