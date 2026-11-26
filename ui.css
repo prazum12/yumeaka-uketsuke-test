@@ -221,3 +221,7 @@ input[type=time]:focus-visible,select:focus-visible,textarea:focus-visible{outli
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 #plan h3{font-size:15px;margin:14px 0 2px;padding-top:10px;border-top:1px solid var(--line)}
 #plan h3:first-of-type{border-top:0;padding-top:0}
+
+#plan .lec{flex-direction:row;flex-wrap:wrap;align-items:center}
+#plan .lec .lectx{flex:1 1 220px}
+.rowbtn{display:flex;gap:8px;flex-wrap:wrap}

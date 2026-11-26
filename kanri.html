@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=21">
-<script src="log.js?v=4"></script>
+<link rel="stylesheet" href="ui.css?v=22">
+<script src="log.js?v=5"></script>
 </head>
 <body>
 <header class="band"><div class="band-in">
@@ -122,22 +122,32 @@ var lc=el('div','card');lc.appendChild(el('h2','','これからの講義'));var 
 (r.lectureList||[]).forEach(function(d){if(!d.lectures.length)return;any=true;lc.appendChild(el('h3','',d.label+(d.title?'　'+d.title:'')));
 d.lectures.forEach(function(l){var row=el('div','lec');var lx=el('div','lectx');lx.appendChild(el('b','',l.title));lx.appendChild(el('span','',l.start+'〜'+l.end+(l.by?'　担当：'+l.by:'')));lx.appendChild(el('span','n','参加の予約 '+l.count+'人'+(l.names.length?'（'+l.names.join('、')+'）':'')));row.appendChild(lx);
 if(l.canStop){var k=el('button','act warn','中止する');k.onclick=function(){if(k.dataset.sure){plan({op:'stopLecture',target:l.id})}else{k.dataset.sure='1';k.textContent='本当に中止する';setTimeout(function(){delete k.dataset.sure;k.textContent='中止する'},4000)}};row.appendChild(k)}
+if(l.canStop){var eb=el('button','act quiet','直す');eb.onclick=function(){$('lEdit').value=l.id;$('lDay').value=d.id;$('lDay').disabled=true;$('lTitle').value=l.title;$('lStart').value=l.start;$('lEnd').value=l.end;$('lBy').value=l.by;$('lDetail').value=l.detail||'';$('lGo').textContent='この内容で講義を直す';$('lHead').textContent='講義を直す（'+l.title+'）';$('lCancel').className='btn quiet';$('lHead').scrollIntoView({behavior:'smooth',block:'start'})};row.appendChild(eb)}
 lc.appendChild(row)})});
 if(!any)lc.appendChild(el('p','','まだ講義はありません。'));PL.appendChild(lc);
-var fc=el('div','card');fc.appendChild(el('h2','','講義を足す'));
+var fc=el('div','card');var lh=el('h2','','講義を足す');lh.id='lHead';fc.appendChild(lh);var le=inp('lEdit','hidden');fc.appendChild(le);
 var sd=el('select');sd.id='lDay';(r.lectureList||[]).forEach(function(d){var o=el('option','',d.label+(d.title?'　'+d.title:'')+'（'+d.open+'〜'+d.close+'）');o.value=d.id;sd.appendChild(o)});if(keep.lDay)sd.value=keep.lDay;
 fld(fc,'どの活動日に',sd);fld(fc,'講義名（40文字まで）',inp('lTitle','text'));
 var tw=el('div','two');var t1=el('div');fld(t1,'始まり',inp('lStart','time','16:00'));var t2=el('div');fld(t2,'終わり',inp('lEnd','time','17:00'));tw.appendChild(t1);tw.appendChild(t2);fc.appendChild(tw);
 fld(fc,'担当する人',inp('lBy','text',r.me.name));fld(fc,'詳細（なくてもよい。500文字まで）',inp('lDetail','textarea'));
-var lb=el('button','btn','この内容で講義を足す');lb.onclick=function(){plan({op:'addLecture',day:$('lDay').value,title:$('lTitle').value,start:$('lStart').value,end:$('lEnd').value,by:$('lBy').value,detail:$('lDetail').value},['lTitle','lDetail'])};fc.appendChild(lb);
+var lb=el('button','btn','この内容で講義を足す');lb.id='lGo';lb.onclick=function(){var o={title:$('lTitle').value,start:$('lStart').value,end:$('lEnd').value,by:$('lBy').value,detail:$('lDetail').value};if($('lEdit').value){o.op='editLecture';o.target=$('lEdit').value}else{o.op='addLecture';o.day=$('lDay').value}plan(o,['lTitle','lDetail','lEdit'])};fc.appendChild(lb);
+var lcn=el('button','btn quiet hide','直すのをやめる');lcn.id='lCancel';lcn.onclick=function(){['lTitle','lDetail','lEdit'].forEach(function(i){$(i).value=''});load()};fc.appendChild(lcn);
+if(le.value){var cur=null;(r.lectureList||[]).forEach(function(d){d.lectures.forEach(function(l){if(l.id===le.value)cur=l})});if(cur){sd.disabled=true;lb.textContent='この内容で講義を直す';lh.textContent='講義を直す（'+cur.title+'）';lcn.className='btn quiet'}else{le.value=''}}
 fc.appendChild(el('small','','講義の時刻は、その日の開いている時間の中にしてください。参加の予約は、その日に行く予約をした人ができます。'));PL.appendChild(fc);
-if(r.me.isAdmin){var dc=el('div','card');dc.appendChild(el('h2','','活動日を足す'));
+if(r.me.isAdmin){var dl=el('div','card');dl.appendChild(el('h2','','これからの活動日'));
+(r.lectureList||[]).forEach(function(d){var row=el('div','lec');var lx=el('div','lectx');lx.appendChild(el('b','',d.label+(d.title?'　'+d.title:'')));lx.appendChild(el('span','','開いている時間 '+d.open+'〜'+d.close+'　そろう時間 '+d.cs+'〜'+d.ce));lx.appendChild(el('span','n','予約 '+d.booked+'人　講義 '+d.lectures.length+'つ'));row.appendChild(lx);
+var bx=el('div','rowbtn');var e2=el('button','act quiet','直す');e2.onclick=function(){$('dEdit').value=d.id;$('dDate').value=d.id;$('dDate').disabled=true;$('dTitle').value=d.title;$('dOpen').value=d.open;$('dClose').value=d.close;$('dCs').value=d.cs;$('dCe').value=d.ce;$('dDetail').value=d.detail||'';$('dGo').textContent='この内容で活動日を直す';$('dHead').textContent='活動日を直す（'+d.label+'）';$('dCancel').className='btn quiet';$('dHead').scrollIntoView({behavior:'smooth',block:'start'})};bx.appendChild(e2);
+var k2=el('button','act warn','中止する');k2.onclick=function(){if(k2.dataset.sure){plan({op:'stopDay',target:d.id})}else{k2.dataset.sure='1';k2.textContent='本当に中止する（予約 '+d.booked+'人）';setTimeout(function(){delete k2.dataset.sure;k2.textContent='中止する'},4000)}};bx.appendChild(k2);row.appendChild(bx);dl.appendChild(row)});
+PL.appendChild(dl);
+var dc=el('div','card');var dh=el('h2','','活動日を足す');dh.id='dHead';dc.appendChild(dh);var de=inp('dEdit','hidden');dc.appendChild(de);
 fld(dc,'日付',inp('dDate','date'));fld(dc,'名前（講習、ミニ講義の日 など。40文字まで）',inp('dTitle','text','講習'));
 var w1=el('div','two');var a1=el('div');fld(a1,'開く',inp('dOpen','time','12:00'));var a2=el('div');fld(a2,'閉める',inp('dClose','time','18:00'));w1.appendChild(a1);w1.appendChild(a2);dc.appendChild(w1);
 var w2=el('div','two');var b1=el('div');fld(b1,'みんながそろう時間（から）',inp('dCs','time','13:00'));var b2=el('div');fld(b2,'（まで）',inp('dCe','time','16:00'));w2.appendChild(b1);w2.appendChild(b2);dc.appendChild(w2);
 fld(dc,'詳細（なくてもよい）',inp('dDetail','textarea'));
-var db=el('button','btn','この内容で活動日を足す');db.onclick=function(){plan({op:'addDay',date:$('dDate').value,title:$('dTitle').value,open:$('dOpen').value,close:$('dClose').value,coreStart:$('dCs').value,coreEnd:$('dCe').value,detail:$('dDetail').value},['dDate','dDetail'])};dc.appendChild(db);
-dc.appendChild(el('small','','締切は、自動で3日前になります。足すと、Discordの「活動日の予約」に予約の投稿が出ます。活動日を足せるのは、イトナブ(講師)のロールがある人だけです。'));PL.appendChild(dc)}
+var db=el('button','btn','この内容で活動日を足す');db.id='dGo';db.onclick=function(){var o={title:$('dTitle').value,open:$('dOpen').value,close:$('dClose').value,coreStart:$('dCs').value,coreEnd:$('dCe').value,detail:$('dDetail').value};if($('dEdit').value){o.op='editDay';o.target=$('dEdit').value}else{o.op='addDay';o.date=$('dDate').value}plan(o,['dDate','dDetail','dEdit'])};dc.appendChild(db);
+var dcn=el('button','btn quiet hide','直すのをやめる');dcn.id='dCancel';dcn.onclick=function(){['dDate','dDetail','dEdit'].forEach(function(i){$(i).value=''});load()};dc.appendChild(dcn);
+if(de.value){$('dDate').disabled=true;db.textContent='この内容で活動日を直す';dh.textContent='活動日を直す（'+de.value+'）';dcn.className='btn quiet'}
+dc.appendChild(el('small','','締切は、足すときに自動で3日前になります（直しても変わりません）。日付は直せません。活動日を足せるのは、イトナブ(講師)のロールがある人だけです。'));PL.appendChild(dc)}
 var V=$('devices');V.textContent='';
 if(r.devices){var c=el('div','card');c.appendChild(el('h2','','受付に使える端末'));var t=el('table');
 r.devices.forEach(function(x){var tr=el('tr');tr.appendChild(el('td','',x.name+(x.mine?'（この端末）':'')));tr.appendChild(el('td','',x.id));tr.appendChild(el('td','',x.at?x.at.slice(0,16):''));
