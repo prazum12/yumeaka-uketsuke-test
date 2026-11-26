@@ -70,10 +70,19 @@ body{padding-bottom:24px}
     <button id="shoot" class="btn">顔写真を撮る</button>
   </div>
 
+  <div class="card" id="plateCard">
+    <div class="step"><h2>自分のネームプレート</h2></div>
+    <p class="txt">紙のネームプレートと同じものです。紙を忘れたときは、この画像を受付で見せても受付できます。</p>
+    <img id="plateImg" alt="自分のネームプレート" style="display:block;width:100%;border-radius:12px;border:1px solid var(--line)">
+    <a id="plateSave" class="btn quiet" style="text-align:center;text-decoration:none;margin-top:10px">画像を保存する</a>
+    <small class="foot">保存できないときは、画像を長押しして「写真に追加」や「画像を保存」を選んでください。</small>
+  </div>
+
   <a class="btn quiet" id="toYoyaku" style="text-align:center;text-decoration:none">活動日の予約へ</a>
   <small class="foot">このページのアドレスは、あなた専用です。ほかの人には教えないでください。</small>
 </div>
 </main>
+<script src="qr1m.js?v=1"></script>
 <script>
 (function(){
 var API='https://yasuulab-n8n.xvps.jp/webhook/yumeaka-yoyaku-page-api-e7b204';
@@ -97,7 +106,25 @@ $('s1').textContent=P.confirmedAt?'確認済み':'まだ';$('s1').className=P.co
 $('ok').textContent=P.confirmedAt?'呼び名を直して、もう一度確認する':'この内容で確認する';
 if(P.canSelfPhoto){$('photoCard').className='card';$('s2').textContent=P.hasPhoto?'登録済み':'まだ';$('s2').className=P.hasPhoto?'done':'todo';$('shoot').textContent=P.hasPhoto?'顔写真を撮り直す':'顔写真を撮る'}
 else{$('photoCard').className='card';$('s2').textContent='';$('ptxt').textContent='顔写真は、活動日に受付で撮ります。ここでの登録は不要です。';$('shoot').className='btn hide'}
-$('toYoyaku').href='yoyaku.html#k='+encodeURIComponent(key)}
+$('toYoyaku').href='yoyaku.html#k='+encodeURIComponent(key);plate()}
+
+// 自分のネームプレートを、紙と同じ並びで描く（91mm×55mm、300dpi相当）
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+function drawPlate(){if(!P||!window.YumeQR)return;var W=1075,H=650,F='"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif';
+var acc=P.group==='メンター'?'#ef6c00':P.group==='運営'?'#5e35b1':'#009688';
+var c=document.createElement('canvas');c.width=W;c.height=H;var g=c.getContext('2d');
+g.fillStyle='#fcfaf5';g.fillRect(0,0,W,H);g.fillStyle='#16213e';g.fillRect(0,0,W,132);
+g.textBaseline='middle';g.fillStyle='#fff';g.font='900 46px '+F;g.fillText('YUME ACADEMY',48,52);
+g.fillStyle='#bec8e1';g.font='500 24px '+F;g.fillText('横須賀プログラミング“夢”アカデミー',48,100);
+g.font='900 30px '+F;var rw=g.measureText(P.group).width;g.fillStyle=acc;rr(g,W-rw-96,40,rw+52,56,28);g.fill();g.fillStyle='#fff';g.fillText(P.group,W-rw-70,69);
+g.fillStyle=acc;g.fillRect(0,132,18,H-132);
+var qs=330,qx=W-qs-48,qy=214;g.fillStyle='#fff';rr(g,qx-14,qy-14,qs+28,qs+28,18);g.fill();g.strokeStyle='#e1ded6';g.lineWidth=3;g.stroke();
+var q=YumeQR.make('yumeaka:'+P.no);if(q){var cell=qs/(q.size+4);g.fillStyle='#000';for(var y=0;y<q.size;y++)for(var x=0;x<q.size;x++)if(q.dark(x,y))g.fillRect(Math.floor(qx+(x+2)*cell),Math.floor(qy+(y+2)*cell),Math.ceil(cell),Math.ceil(cell))}
+var maxW=qx-14-62-44,size=168;g.fillStyle='#18181c';for(;size>60;size-=4){g.font='900 '+size+'px '+F;if(g.measureText(P.name).width<=maxW)break}g.font='900 '+size+'px '+F;g.fillText(P.name,62,305);
+g.font='900 62px '+F;var lab='No. '+P.no,lw=g.measureText(lab).width;g.strokeStyle=acc;g.lineWidth=6;rr(g,62,448,lw+56,100,22);g.stroke();g.fillStyle=acc;g.fillText(lab,90,500);
+var u=c.toDataURL('image/png');$('plateImg').src=u;$('plateSave').href=u;$('plateSave').setAttribute('download','yumeaka_nameplate_'+P.no+'.png')}
+function plate(){if(!P)return;var go=function(){try{drawPlate()}catch(e){}};
+if(document.fonts&&document.fonts.load){var t=setTimeout(go,2500);Promise.all([document.fonts.load('900 60px "Zen Maru Gothic"',P.name+P.group+'YUME ACADEMY No.0123456789-'),document.fonts.load('500 24px "Zen Maru Gothic"','横須賀プログラミング“夢”アカデミー')]).then(function(){clearTimeout(t);go()},function(){clearTimeout(t);go()})}else go()}
 
 function stopCam(){camTry++;if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}$('v').srcObject=null}
 function startCam(){stopCam();var my=camTry;$('cam').className='cam';$('shotImg').className='hide';$('v').className='';$('shutterWrap').className='shutter';
