@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=4">
+<link rel="stylesheet" href="ui.css?v=5">
 <style>
 body{padding-bottom:24px}
 .hello{font-family:var(--round);font-weight:900;font-size:24px;margin:10px 2px 0}
@@ -49,9 +49,10 @@ body{padding-bottom:24px}
   <div class="band-title">活動日の予約<small>検証用</small></div>
 </div></header>
 <main>
-<p class="hello" id="who">読み込んでいます…</p>
+<p class="hello" id="who"></p>
+<div class="loading" id="load"><span class="ring"></span>予約のようすを確かめています</div>
 <div id="msg" class="note hide"></div>
-<div id="days"></div>
+<div id="days"><div class="sk tk"><b></b><div><i class="h"></i><i class="w80"></i><i class="block"></i></div></div><div class="sk tk"><b></b><div><i class="h"></i><i class="w80"></i><i class="block"></i></div></div></div>
 <small class="foot">このページのアドレスは、あなた専用です。ほかの人には教えないでください。</small>
 </main>
 <script>
@@ -64,14 +65,16 @@ function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==und
 function msg(t,c){var m=$('msg');m.textContent=t||'';m.className='note '+(c||'ng')+(t?'':' hide')}
 function toMin(t){var p=t.split(':');return p[0]*60+ +p[1]}
 function toHM(m){return ('0'+Math.floor(m/60)).slice(-2)+':'+('0'+m%60).slice(-2)}
-function call(o){if(busy)return;busy=true;var b=new URLSearchParams();o.key=key;for(var k in o)b.set(k,o[k]);
-fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;render(r)}).catch(function(){busy=false;msg('通信に失敗しました。もう一度試してください。','ng')})}
+function busyOn(v){busy=v;document.body.classList[v?'add':'remove']('busy');Array.prototype.forEach.call(document.querySelectorAll('#days button'),function(x){x.disabled=v})}
+function call(o){if(busy)return;busyOn(true);var b=new URLSearchParams();o.key=key;for(var k in o)b.set(k,o[k]);
+fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busyOn(false);render(r)}).catch(function(){busyOn(false);$('load').className='loading hide';msg('通信に失敗しました。もう一度試してください。','ng')})}
 function stepper(cap,val,min,max,onchange){var w=el('div','step');w.appendChild(el('div','cap',cap));var row=el('div','row');
 var a=el('button','','−'),v=el('div','val',toHM(val)),b=el('button','','＋');a.setAttribute('aria-label',cap+'を30分早める');b.setAttribute('aria-label',cap+'を30分遅らせる');
 var st={v:val,min:min,max:max,set:function(){v.textContent=toHM(st.v);a.disabled=st.v<=st.min;b.disabled=st.v>=st.max}};
 a.onclick=function(){if(st.v>st.min){st.v-=30;st.set();onchange()}};b.onclick=function(){if(st.v<st.max){st.v+=30;st.set();onchange()}};
 row.appendChild(a);row.appendChild(v);row.appendChild(b);w.appendChild(row);st.el=w;st.set();return st}
 function render(r){
+$('load').className='loading hide';
 if(!r.ok){$('who').textContent='';$('days').textContent='';msg(r.message||'このリンクは使えません。','ng');return}
 $('who').textContent=r.name+' さん';$('who').appendChild(el('small','','No. '+r.no));msg(r.message,r.cls);
 var box=$('days');box.textContent='';
@@ -98,7 +101,7 @@ var steps=el('div','steps');steps.appendChild(A.el);steps.appendChild(B.el);b.ap
 go.onclick=function(){call({op:'reserve',day:d.id,arr:toHM(A.v),lea:toHM(B.v)})};b.appendChild(go);
 if(d.reserved){go.className='btn hide';var x=el('button','btn quiet','行けなくなったので取り消す');x.onclick=function(){call({op:'cancel',day:d.id})};b.appendChild(x)}
 t.appendChild(b);box.appendChild(t)})}
-if(!key){$('who').textContent='';msg('このページは、あなた専用のリンクから開いてください。','ng')}else call({op:'view'});
+if(!key){$('load').className='loading hide';$('days').textContent='';msg('このページは、あなた専用のリンクから開いてください。','ng')}else call({op:'view'});
 })();
 </script>
 </body>

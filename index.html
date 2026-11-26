@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=4">
+<link rel="stylesheet" href="ui.css?v=5">
 <style>
 .finder{position:relative;border-radius:22px;overflow:hidden;background:#0d1326;aspect-ratio:4/3;margin:12px 0 0}
 .finder video{width:100%;height:100%;object-fit:cover;display:block}
@@ -64,16 +64,16 @@
   <canvas id="c" class="hide"></canvas>
 
   <div id="result" class="result r-idle" aria-live="assertive">
-    <div class="stamp" id="stamp">受付</div>
-    <div><div class="who" id="who2">読み取りを待っています</div><div class="what" id="what"></div></div>
+    <div class="stamp wait" id="stamp"></div>
+    <div><div class="who" id="who2">準備しています</div><div class="what" id="what"></div></div>
   </div>
 
   <div class="tiles">
-    <button class="tile t-yet" data-k="notYet"><div class="num" id="n2">0</div><div class="lab">まだ来ていない</div></button>
-    <button class="tile t-here on" data-k="arrived"><div class="num" id="n1">0</div><div class="lab">来ている</div></button>
-    <button class="tile t-gone" data-k="left"><div class="num" id="n3">0</div><div class="lab">帰った</div></button>
+    <button class="tile t-yet" data-k="notYet"><div class="num" id="n2">–</div><div class="lab">まだ来ていない</div></button>
+    <button class="tile t-here on" data-k="arrived"><div class="num" id="n1">–</div><div class="lab">来ている</div></button>
+    <button class="tile t-gone" data-k="left"><div class="num" id="n3">–</div><div class="lab">帰った</div></button>
   </div>
-  <div class="list"><div class="chips" id="names"></div></div>
+  <div class="list"><div class="chips" id="names"><div class="sk" style="margin:0;border:0;padding:4px"><i class="w80"></i><i class="w60"></i></div></div></div>
 
   <details>
     <summary>ネームプレートを忘れた人・日付の変更</summary>
@@ -124,6 +124,7 @@ var stamp=kind==='out'?'退出':kind==='ng'?'不可':(i>=0?'到着':'済');
 show(kind,stamp,who.replace(/ さん$/,' さん'),what,scanned);
 if(scanned&&navigator.vibrate){try{navigator.vibrate(kind==='ng'?[60,60,60]:kind==='warn'?[120,60,120]:120)}catch(e){}}}
 function idle(){show('idle','受付','読み取りを待っています','')}
+function waiting(){show('idle','','準備しています','名簿と予約を確かめています');$('stamp').className='stamp wait'}
 
 function names(){var box=$('names');box.textContent='';var a=L[tab]||[];var k=tab==='arrived'?'here':tab==='left'?'gone':'yet';
 box.parentNode.className='list sec s-'+k;
@@ -132,12 +133,12 @@ a.forEach(function(t){var m=/^(.*)（(.*)）$/.exec(t);var c=el('div','chip');c.
 function lists(r){if(!r||!r.lists)return;L=r.lists;$('n1').textContent=L.arrived.length;$('n2').textContent=L.notYet.length;$('n3').textContent=L.left.length;names()}
 Array.prototype.forEach.call(document.querySelectorAll('.tile'),function(b){b.onclick=function(){tab=b.dataset.k;Array.prototype.forEach.call(document.querySelectorAll('.tile'),function(x){x.className=x.className.replace(/\s*on$/,'')});b.className+=' on';names()}});
 
-function send(code){if(busy)return;busy=true;
-post({op:code?'scan':'open',device:me.device,key:me.key,day:$('day').value,code:code||''}).then(function(r){busy=false;
+function send(code){if(busy)return;busy=true;document.body.classList.add('busy');
+post({op:code?'scan':'open',device:me.device,key:me.key,day:$('day').value,code:code||''}).then(function(r){busy=false;document.body.classList.remove('busy');
 if(r.auth===false){stopCam();show('ng','不可','この端末では受付できません',r.message);return}
 lists(r);$('dayLabel').textContent=dayText($('day').value)||'検証用';
 if(!code){idle();return}
-showMsg(r.message,r.cls||'',true)}).catch(function(){busy=false;show('ng','不可','通信に失敗しました','もう一度かざしてください。',true)})}
+showMsg(r.message,r.cls||'',true)}).catch(function(){busy=false;document.body.classList.remove('busy');show('ng','不可','通信に失敗しました','もう一度かざしてください。',true)})}
 
 function tick(){if(!camOn)return;var v=$('v');
 if(v.readyState===v.HAVE_ENOUGH_DATA){var c=$('c');c.width=v.videoWidth;c.height=v.videoHeight;var x=c.getContext('2d');x.drawImage(v,0,0);
@@ -154,7 +155,7 @@ var p=v.play();if(p&&p.catch)p.catch(function(){});camOn=true;tick()}).catch(fun
 
 function openApp(){$('reg').className='hide';$('app').className='';$('dock').className='dock';note('');
 $('who').textContent='この端末：'+me.name+'（'+me.device+'）';
-idle();startCam();
+waiting();startCam();
 if(q.get('day')){$('day').value=q.get('day');send('');return}
 $('day').value=today;
 postTo(KANRI,{op:'nextday',device:me.device,key:me.key}).then(function(r){if(r&&r.day)$('day').value=r.day;send('')}).catch(function(){send('')})}
@@ -163,13 +164,13 @@ var h=new URLSearchParams(location.hash.replace(/^#/,''));if(h.get('t'))$('code'
 
 $('regbtn').onclick=function(){var code=$('code').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase();
 if(code.length<8){note('登録コードを入れてください。');return}
-var key=randHex(32);note('登録しています…','warn');
-post({op:'register',code:code,key:key}).then(function(r){
+var key=randHex(32);note('登録しています…','warn');document.body.classList.add('busy');$('regbtn').disabled=true;
+post({op:'register',code:code,key:key}).then(function(r){document.body.classList.remove('busy');$('regbtn').disabled=false;
 if(!r.ok){note(r.message||'登録できませんでした。');return}
 me={device:r.device,key:key,name:r.name};
 if(!save(me)){note('この端末は情報を保存できない設定のため、登録できませんでした。\nプライベートブラウズを切るか、ふだん使っているブラウザで開き直してください。');me=null;return}
 history.replaceState(null,'',location.pathname+location.search);
-openApp()}).catch(function(){note('通信に失敗しました。もう一度試してください。')})};
+openApp()}).catch(function(){document.body.classList.remove('busy');$('regbtn').disabled=false;note('通信に失敗しました。もう一度試してください。')})};
 $('cam').onclick=startCam;
 $('mbtn').onclick=function(){var m=$('manual').value.trim();if(m){send('yumeaka:'+m);$('manual').value=''}};
 $('day').onchange=function(){send('')};

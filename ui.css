@@ -104,3 +104,19 @@ td{padding:8px 4px;border-top:1px solid var(--line);vertical-align:middle}
 .stamp.pop{animation:press .28s cubic-bezier(.2,1.4,.4,1)}
 @keyframes press{from{transform:rotate(-9deg) scale(1.7);opacity:0}to{transform:rotate(-9deg) scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){.stamp.pop{animation:none}}
+
+/* 読み込み中：帯の下を走る線、回るはんこ、形だけ先に出る札 */
+.band::after{content:"";display:block;height:4px;background:transparent}
+body.busy .band::after{background:linear-gradient(90deg,transparent 0,var(--brand) 30%,#7fe0d6 50%,var(--brand) 70%,transparent 100%);background-size:50% 100%;background-repeat:no-repeat;animation:run 1s linear infinite}
+@keyframes run{from{background-position:-50% 0}to{background-position:150% 0}}
+.loading{display:flex;align-items:center;gap:14px;padding:6px 2px 2px;color:var(--ink-2);font-family:var(--round);font-weight:700;font-size:16px}
+.ring{width:46px;height:46px;border-radius:50%;border:5px dotted var(--brand);flex:none;animation:spin 2.4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sk{border-radius:18px;background:var(--paper);border:1px solid var(--line);margin:12px 0;padding:16px;overflow:hidden}
+.sk i{display:block;height:14px;border-radius:7px;margin:10px 0;background:linear-gradient(90deg,var(--bg) 0,#f6f9fc 50%,var(--bg) 100%);background-size:200% 100%;animation:shine 1.3s linear infinite}
+.sk i.h{height:26px;width:45%}.sk i.w60{width:60%}.sk i.w80{width:80%}.sk i.block{height:64px;border-radius:14px}
+.sk.tk{display:flex;padding:0}.sk.tk b{flex:none;width:92px;background:var(--ink);opacity:.85}.sk.tk div{flex:1;padding:14px}
+@keyframes shine{from{background-position:200% 0}to{background-position:-200% 0}}
+.stamp.wait{border-style:dotted;animation:spin 2.4s linear infinite;color:var(--brand);opacity:1!important;font-size:0}
+.btn:disabled{opacity:.55}
+@media (prefers-reduced-motion:reduce){.ring,.stamp.wait,.sk i,body.busy .band::after{animation:none}}
