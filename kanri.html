@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=20">
-<script src="log.js?v=3"></script>
+<link rel="stylesheet" href="ui.css?v=21">
+<script src="log.js?v=4"></script>
 </head>
 <body>
 <header class="band"><div class="band-in">
@@ -21,12 +21,14 @@
 <div id="nav" class="pills hide">
   <button data-tab="days" class="on">活動日</button>
   <button data-tab="people">登録の状況</button>
+  <button data-tab="plan">講義・活動日</button>
   <button data-tab="devices" id="tDevices">受付の端末</button>
 </div>
 <div id="msg" class="note hide"></div>
 <div class="loading" id="load"><span class="ring"></span>今日のようすを集めています</div>
 <div id="days"><div class="sk"><i class="h"></i><i class="w80"></i><i class="block"></i><i class="w60"></i></div></div>
 <div id="people" class="hide"></div>
+<div id="plan" class="hide"></div>
 <div id="devices" class="hide"></div>
 <div id="foot" class="hide"><small class="foot">細かい修正が必要なときは、<a id="sheet" target="_blank" rel="noopener">もとの表（スプレッドシート）</a>を開いてください。</small></div>
 </main>
@@ -45,11 +47,16 @@ function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==und
 function msg(t,c){var m=$('msg');m.textContent=t||'';m.className='note '+(c||'ng')+(t?'':' hide')}
 function call(o,keep){if(busy)return;busy=true;document.body.classList.add('busy');var b=new URLSearchParams();o.device=me.device;o.key=me.key;for(var k in o)b.set(k,o[k]);
 fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;document.body.classList.remove('busy');$('load').className='loading hide';
-if(r.auth===false){$('who').textContent='';$('nav').className='pills hide';['days','people','devices'].forEach(function(i){$(i).textContent=''});msg(r.message+'\n受付の画面から、端末を登録し直してください。','ng');return}
+if(r.auth===false){$('who').textContent='';$('nav').className='pills hide';['days','people','plan','devices'].forEach(function(i){$(i).textContent=''});msg(r.message+'\n受付の画面から、端末を登録し直してください。','ng');return}
 if(r.reload){if(r.self){msg('この端末を止めました。','ok');return}var m=r.message,c=r.cls;busy=false;load(function(){msg(m,c)});return}
 render(r);if(!keep)msg('')}).catch(function(){busy=false;document.body.classList.remove('busy');$('load').className='loading hide';msg('通信に失敗しました。もう一度試してください。','ng')})}
 function resetAll(){if(busy)return;busy=true;document.body.classList.add('busy');msg('リセットしています。20秒ほど待ってください。','ok');var b=new URLSearchParams();b.set('op','reset');b.set('sure','reset');b.set('device',me.device);b.set('key',me.key);
 fetch(RESET,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;document.body.classList.remove('busy');if(r.auth===false){msg(r.message,'ng');return}if(r.reload){load(function(){msg(r.message,r.cls)})}else msg(r.message,r.cls||'ng')}).catch(function(){busy=false;document.body.classList.remove('busy');msg('通信に失敗しました。リセットが終わったかどうかは、少し待ってから開き直して確かめてください。','ng')})}
+// 講義・活動日の操作：断られたときは、入れた内容を残したまま知らせる
+function plan(o,clear){if(busy)return;busy=true;document.body.classList.add('busy');var b=new URLSearchParams();o.device=me.device;o.key=me.key;for(var k in o)b.set(k,o[k]);
+fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;document.body.classList.remove('busy');if(r.auth===false){msg(r.message,'ng');return}
+if(r.done){(clear||[]).forEach(function(i){if($(i))$(i).value=''});load(function(){msg(r.message,r.cls)})}else{msg(r.message,r.cls||'ng')}window.scrollTo({top:0,behavior:'smooth'})})
+.catch(function(){busy=false;document.body.classList.remove('busy');msg('通信に失敗しました。もう一度試してください。','ng')})}
 function load(after){busy=false;var b=new URLSearchParams();b.set('op','overview');b.set('device',me.device);b.set('key',me.key);busy=true;document.body.classList.add('busy');
 fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;document.body.classList.remove('busy');$('load').className='loading hide';if(r.auth===false){msg(r.message,'ng');return}render(r);if(after)after()}).catch(function(){busy=false;document.body.classList.remove('busy');$('load').className='loading hide';msg('通信に失敗しました。','ng')})}
 function people(title,list){var w=document.createDocumentFragment();w.appendChild(el('h3','',title+'（'+list.length+'人）'));
@@ -107,6 +114,30 @@ var pt=el('table','ptab');r.people.forEach(function(p){var tr=el('tr');var a=el(
 if(i===1&&p.hasPhoto&&r.me.isAdmin){var k=el('button','act quiet','写真を消す');k.style.display='block';k.style.marginTop='6px';k.onclick=function(){if(k.dataset.sure){call({op:'removePhoto',target:p.no})}else{k.dataset.sure='1';k.className='act warn';k.textContent='本当に消す（戻せません）';setTimeout(function(){delete k.dataset.sure;k.className='act quiet';k.textContent='写真を消す'},6000)}};td.appendChild(k)}
 tr.appendChild(td)});pt.appendChild(tr)});
 pc.appendChild(pt);pc.appendChild(el('small','foot','運営とメンターは、Discordの「自分の登録を確かめる」ボタンから、本人が確認と顔写真の登録をします。メンバーの顔写真は、活動日に受付で撮ります。'+(r.me.isAdmin?'退会・修了した人の顔写真は「写真を消す」で消します。消した写真は元に戻せません。':'')));Q.appendChild(pc)}
+// 講義・活動日：これからの講義を見る、講義を足す、活動日を足す（活動日はイトナブ(講師)だけ）
+var PL=$('plan');var keep={};Array.prototype.forEach.call(PL.querySelectorAll('input,select,textarea'),function(x){if(x.id)keep[x.id]=x.value});PL.textContent='';
+function fld(parent,label,node){var l=el('label','',label);l.setAttribute('for',node.id);parent.appendChild(l);parent.appendChild(node);return node}
+function inp(id,type,val){var x=el(type==='textarea'?'textarea':'input');x.id=id;if(type!=='textarea')x.type=type;x.value=keep[id]!==undefined?keep[id]:(val||'');return x}
+var lc=el('div','card');lc.appendChild(el('h2','','これからの講義'));var any=false;
+(r.lectureList||[]).forEach(function(d){if(!d.lectures.length)return;any=true;lc.appendChild(el('h3','',d.label+(d.title?'　'+d.title:'')));
+d.lectures.forEach(function(l){var row=el('div','lec');var lx=el('div','lectx');lx.appendChild(el('b','',l.title));lx.appendChild(el('span','',l.start+'〜'+l.end+(l.by?'　担当：'+l.by:'')));lx.appendChild(el('span','n','参加の予約 '+l.count+'人'+(l.names.length?'（'+l.names.join('、')+'）':'')));row.appendChild(lx);
+if(l.canStop){var k=el('button','act warn','中止する');k.onclick=function(){if(k.dataset.sure){plan({op:'stopLecture',target:l.id})}else{k.dataset.sure='1';k.textContent='本当に中止する';setTimeout(function(){delete k.dataset.sure;k.textContent='中止する'},4000)}};row.appendChild(k)}
+lc.appendChild(row)})});
+if(!any)lc.appendChild(el('p','','まだ講義はありません。'));PL.appendChild(lc);
+var fc=el('div','card');fc.appendChild(el('h2','','講義を足す'));
+var sd=el('select');sd.id='lDay';(r.lectureList||[]).forEach(function(d){var o=el('option','',d.label+(d.title?'　'+d.title:'')+'（'+d.open+'〜'+d.close+'）');o.value=d.id;sd.appendChild(o)});if(keep.lDay)sd.value=keep.lDay;
+fld(fc,'どの活動日に',sd);fld(fc,'講義名（40文字まで）',inp('lTitle','text'));
+var tw=el('div','two');var t1=el('div');fld(t1,'始まり',inp('lStart','time','16:00'));var t2=el('div');fld(t2,'終わり',inp('lEnd','time','17:00'));tw.appendChild(t1);tw.appendChild(t2);fc.appendChild(tw);
+fld(fc,'担当する人',inp('lBy','text',r.me.name));fld(fc,'詳細（なくてもよい。500文字まで）',inp('lDetail','textarea'));
+var lb=el('button','btn','この内容で講義を足す');lb.onclick=function(){plan({op:'addLecture',day:$('lDay').value,title:$('lTitle').value,start:$('lStart').value,end:$('lEnd').value,by:$('lBy').value,detail:$('lDetail').value},['lTitle','lDetail'])};fc.appendChild(lb);
+fc.appendChild(el('small','','講義の時刻は、その日の開いている時間の中にしてください。参加の予約は、その日に行く予約をした人ができます。'));PL.appendChild(fc);
+if(r.me.isAdmin){var dc=el('div','card');dc.appendChild(el('h2','','活動日を足す'));
+fld(dc,'日付',inp('dDate','date'));fld(dc,'名前（講習、ミニ講義の日 など。40文字まで）',inp('dTitle','text','講習'));
+var w1=el('div','two');var a1=el('div');fld(a1,'開く',inp('dOpen','time','12:00'));var a2=el('div');fld(a2,'閉める',inp('dClose','time','18:00'));w1.appendChild(a1);w1.appendChild(a2);dc.appendChild(w1);
+var w2=el('div','two');var b1=el('div');fld(b1,'みんながそろう時間（から）',inp('dCs','time','13:00'));var b2=el('div');fld(b2,'（まで）',inp('dCe','time','16:00'));w2.appendChild(b1);w2.appendChild(b2);dc.appendChild(w2);
+fld(dc,'詳細（なくてもよい）',inp('dDetail','textarea'));
+var db=el('button','btn','この内容で活動日を足す');db.onclick=function(){plan({op:'addDay',date:$('dDate').value,title:$('dTitle').value,open:$('dOpen').value,close:$('dClose').value,coreStart:$('dCs').value,coreEnd:$('dCe').value,detail:$('dDetail').value},['dDate','dDetail'])};dc.appendChild(db);
+dc.appendChild(el('small','','締切は、自動で3日前になります。足すと、Discordの「活動日の予約」に予約の投稿が出ます。活動日を足せるのは、イトナブ(講師)のロールがある人だけです。'));PL.appendChild(dc)}
 var V=$('devices');V.textContent='';
 if(r.devices){var c=el('div','card');c.appendChild(el('h2','','受付に使える端末'));var t=el('table');
 r.devices.forEach(function(x){var tr=el('tr');tr.appendChild(el('td','',x.name+(x.mine?'（この端末）':'')));tr.appendChild(el('td','',x.id));tr.appendChild(el('td','',x.at?x.at.slice(0,16):''));
@@ -120,7 +151,7 @@ tc.appendChild(el('p','','環境をリセットすると、予約・入退室・
 var rb=el('button','act warn','環境をリセットする');rb.onclick=function(){if(rb.dataset.sure){delete rb.dataset.sure;rb.textContent='環境をリセットする';resetAll()}else{rb.dataset.sure='1';rb.textContent='本当にリセットする（もう一度押す）';setTimeout(function(){delete rb.dataset.sure;rb.textContent='環境をリセットする'},4000)}};
 tc.appendChild(rb);var rs=el('small','','終わるまで20秒ほどかかります。Discordの予約の投稿も、新しいものに入れ替わります。');rs.style.display='block';rs.style.marginTop='8px';tc.appendChild(rs);V.appendChild(tc)}
 }
-Array.prototype.forEach.call(document.querySelectorAll('#nav button'),function(b){b.onclick=function(){Array.prototype.forEach.call(document.querySelectorAll('#nav button'),function(x){x.className=x.className.replace(/\s*on/,'')});b.className=(b.className+' on').trim();['days','people','devices'].forEach(function(i){$(i).className=i===b.dataset.tab?'':'hide'})}});
+Array.prototype.forEach.call(document.querySelectorAll('#nav button'),function(b){b.onclick=function(){Array.prototype.forEach.call(document.querySelectorAll('#nav button'),function(x){x.className=x.className.replace(/\s*on/,'')});b.className=(b.className+' on').trim();['days','people','plan','devices'].forEach(function(i){$(i).className=i===b.dataset.tab?'':'hide'})}});
 if(!me||!me.device||!me.key){$('who').textContent='';$('load').className='loading hide';$('days').textContent='';msg('この端末は登録されていません。\n受付の画面から登録してください。','ng');var a=el('a','','受付の画面へ');a.href='./';$('days').appendChild(a)}else load();
 })();
 </script>

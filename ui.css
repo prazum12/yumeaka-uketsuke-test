@@ -213,3 +213,11 @@ button.cald{cursor:pointer}
 .lecnote{display:block;color:var(--ink-2);margin-top:6px}
 .ask{border:2px solid var(--sky)}
 .ask p{white-space:pre-wrap;line-height:1.8;margin:0 0 8px}
+
+/* 運営画面：講義・活動日を足す */
+input[type=time],select,textarea{font:inherit;font-size:17px;padding:12px;border-radius:12px;border:2px solid var(--line);width:100%;background:var(--paper);color:var(--ink);box-sizing:border-box}
+textarea{min-height:96px;resize:vertical;line-height:1.7}
+input[type=time]:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--sky);outline-offset:1px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#plan h3{font-size:15px;margin:14px 0 2px;padding-top:10px;border-top:1px solid var(--line)}
+#plan h3:first-of-type{border-top:0;padding-top:0}
