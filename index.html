@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=9">
+<link rel="stylesheet" href="ui.css?v=10">
 <style>
 .finder{position:relative;border-radius:22px;overflow:hidden;background:#0d1326;aspect-ratio:4/3;margin:12px 0 0}
 .finder video{width:100%;height:100%;object-fit:cover;display:block}
@@ -122,7 +122,7 @@ var today=new Date(Date.now()+9*3600*1000).toISOString().slice(0,10);
 var last='',lastAt=0,busy=false,camOn=false,L={arrived:[],notYet:[],left:[]},tab='arrived';
 
 /* 読み取りの結果を、はんこと大きな名前で見せる */
-var mode='scan',target=null,shot='',facing='environment';
+var mode='scan',target=null,shot='',facing='environment',PH=null;
 function photoHint(){return (target?target.who+' さんの':'')+'顔を枠に入れて、赤い丸を押す'}
 function face(src){var f=$('face');if(src){f.src=src;f.className='face';$('result').classList.add('has-face')}else{f.removeAttribute('src');f.className='face hide';$('result').classList.remove('has-face')}}
 function setTarget(r){if(r&&r.no&&!r.guest){target={no:r.no,who:r.who||''};$('shoot').className='btn quiet';$('shoot').textContent=r.hasPhoto?'顔写真を撮り直す':'顔写真を撮る（まだ登録されていません）'}else{target=null;$('shoot').className='btn quiet hide'}}
@@ -168,10 +168,16 @@ var G={},order=[];r.roster.forEach(function(p){if(!G[p.group]){G[p.group]=[];ord
 var rank=function(g){var m=/^(\d+)期$/.exec(g);return m?+m[1]:(g==='メンター'?900:g==='運営'?950:800)};order.sort(function(a,b){return rank(a)-rank(b)});
 order.forEach(function(g){box.appendChild(el('div','group',g));var ch=el('div','chips');
 G[g].forEach(function(p){var here=(L.arrivedNo||[]).indexOf(p.no)>=0,gone=(L.leftNo||[]).indexOf(p.no)>=0,booked=(L.notYetNo||[]).indexOf(p.no)>=0;
-var c=el('div','chip'+(gone?' off':' tapme'));c.appendChild(el('div','cname',p.name));
-c.appendChild(el('div','csub',gone?'もう帰りました':here?'来ています（押すと退出）':booked?'予約あり':'予約なし'));
+var c=el('div','chip wa'+(gone?' off':' tapme'));var av=el('span','ava',p.name.slice(0,1));av.dataset.no=p.no;c.appendChild(av);var bd=el('div');c.appendChild(bd);
+bd.appendChild(el('div','cname',p.name));
+bd.appendChild(el('div','csub',gone?'もう帰りました':here?'来ています（押すと退出）':booked?'予約あり':'予約なし'));
 if(!gone){c.setAttribute('role','button');c.tabIndex=0;c.onclick=function(){ask(p.no,p.name,here?'out':'in')}}ch.appendChild(c)});box.appendChild(ch)});
-box.appendChild(x)}).catch(function(){ld.remove();box.appendChild(el('div','note ng','通信に失敗しました。もう一度試してください。'));box.appendChild(x)})}
+box.appendChild(x);
+/* 顔写真は名簿とは別に取りにいき、届いたら札にはめる */
+var fill=function(P){Array.prototype.forEach.call(box.querySelectorAll('.ava'),function(a){var u=P[a.dataset.no];if(u){a.style.backgroundImage='url('+u+')';a.className='ava has'}})};
+if(PH)fill(PH);
+postTo(KANRI,{op:'photos',device:me.device,key:me.key}).then(function(q){if(q&&q.photos){PH=q.photos;if($('sheet').className==='sheet')fill(PH)}}).catch(function(){})
+}).catch(function(){ld.remove();box.appendChild(el('div','note ng','通信に失敗しました。もう一度試してください。'));box.appendChild(x)})}
 function lists(r){if(!r||!r.lists)return;L=r.lists;$('n1').textContent=L.arrived.length;$('n2').textContent=L.notYet.length;$('n3').textContent=L.left.length;names()}
 Array.prototype.forEach.call(document.querySelectorAll('.tile'),function(b){b.onclick=function(){tab=b.dataset.k;Array.prototype.forEach.call(document.querySelectorAll('.tile'),function(x){x.className=x.className.replace(/\s*on$/,'')});b.className+=' on';names()}});
 
@@ -255,7 +261,7 @@ $('pretry').onclick=function(){mode='photo';$('confirm').className='two hide';$(
 $('psave').onclick=function(){if(busy)return;busy=true;document.body.classList.add('busy');$('psave').disabled=true;
 post({op:'photo',device:me.device,key:me.key,no:target.no,image:shot}).then(function(r){busy=false;document.body.classList.remove('busy');$('psave').disabled=false;
 if(r.auth===false){scanMode();show('ng','不可','この端末では保存できません',r.message);return}
-scanMode();if(r.saved){face(shot);setTarget({no:target.no,who:target.who,hasPhoto:true});showMsg(r.message,'ok',true)}else{showMsg(r.message||'保存できませんでした','ng',true);setTarget({no:target.no,who:target.who,hasPhoto:false})}
+scanMode();if(r.saved){if(PH)PH[target.no]=shot;face(shot);setTarget({no:target.no,who:target.who,hasPhoto:true});showMsg(r.message,'ok',true)}else{showMsg(r.message||'保存できませんでした','ng',true);setTarget({no:target.no,who:target.who,hasPhoto:false})}
 }).catch(function(){busy=false;document.body.classList.remove('busy');$('psave').disabled=false;show('ng','不可','通信に失敗しました','もう一度「この写真で保存」を押してください。',true)})};
 $('rosterBtn').onclick=openRoster;
 $('sheet').onclick=function(e){if(e.target===$('sheet'))closeSheet()};
