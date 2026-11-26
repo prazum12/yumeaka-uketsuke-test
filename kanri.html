@@ -69,7 +69,7 @@ fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(functi
 function people(title,list){var w=document.createDocumentFragment();w.appendChild(el('h3','',title+'（'+list.length+'人）'));
 if(!list.length){w.appendChild(el('div','txt','いません'));return w}
 var t=el('table');list.forEach(function(p){var tr=el('tr');tr.appendChild(el('td','',p.name));tr.appendChild(el('td','','No. '+p.no));tr.appendChild(el('td','',p.time));
-var td=el('td');td.appendChild(el('span','tag '+(p.here?'here':'yet'),p.here?'来ている':'まだ'));tr.appendChild(td);t.appendChild(tr)});w.appendChild(t);return w}
+var td=el('td');td.appendChild(el('span','tag '+(p.status==='来ている'?'here':'yet'),p.status||(p.here?'来ている':'まだ')));tr.appendChild(td);t.appendChild(tr)});w.appendChild(t);return w}
 function line(title,arr){var w=document.createDocumentFragment();w.appendChild(el('h3','',title+'（'+arr.length+'人）'));w.appendChild(el('div','txt',arr.length?arr.join('、'):'いません'));return w}
 function copy(text,btn){var done=function(){var o=btn.textContent;btn.textContent='コピーしました';setTimeout(function(){btn.textContent=o},1500)};
 if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(function(){msg('コピーできませんでした。文面を長押しして選んでください。','ng')})}else msg('この端末ではコピーのボタンが使えません。文面を長押しして選んでください。','ng')}
