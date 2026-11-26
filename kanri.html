@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=5">
+<link rel="stylesheet" href="ui.css?v=6">
 </head>
 <body>
 <header class="band"><div class="band-in">
@@ -54,7 +54,10 @@ var td=el('td');td.appendChild(el('span','tag '+(p.status==='来ている'?'here
 function line(title,arr){var w=document.createDocumentFragment();w.appendChild(el('h3','',title+'（'+arr.length+'人）'));w.appendChild(el('div','txt',arr.length?arr.join('、'):'いません'));return w}
 function copy(text,btn){var done=function(){var o=btn.textContent;btn.textContent='コピーしました';setTimeout(function(){btn.textContent=o},1500)};
 if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(function(){msg('コピーできませんでした。文面を長押しして選んでください。','ng')})}else msg('この端末ではコピーのボタンが使えません。文面を長押しして選んでください。','ng')}
-function render(r){$('load').className='loading hide';
+var P=null;
+function faces(){if(!P)return;Array.prototype.forEach.call(document.querySelectorAll('.ava'),function(a){var s=P[a.dataset.no];if(s){a.style.backgroundImage='url('+s+')';a.className='ava has'}})}
+function loadFaces(){var b=new URLSearchParams();b.set('op','photos');b.set('device',me.device);b.set('key',me.key);fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){if(r&&r.photos){P=r.photos;faces()}}).catch(function(){})}
+function render(r){$('load').className='loading hide';setTimeout(function(){if(P)faces();else loadFaces()},0);
 $('who').textContent=r.me.name+' さんの端末'+(r.me.isAdmin?'':'（リーダーズ用の表示）');
 $('nav').className='pills';$('foot').className='';$('sheet').href=r.sheetUrl;
 $('tDevices').className=r.me.isAdmin?'':'hide';
@@ -78,13 +81,13 @@ var total=all.length||1;var bar=el('div','bar');
 c.appendChild(bar);
 var sec=function(key,icon,title,list,empty){var w=el('div','sec s-'+key);w.appendChild(el('div','sechead',icon+' '+title+'　'+list.length+'人'));
 if(!list.length){w.appendChild(el('div','empty',empty));c.appendChild(w);return}
-var g=el('div','chips');list.forEach(function(p){var ch=el('div','chip'+(p.late?' late':''));
+var g=el('div','chips');list.forEach(function(p){var ch=el('div','chip wa'+(p.late?' late':''));var av=el('span','ava',p.name.slice(0,1));av.dataset.no=p.no;ch.appendChild(av);var bd=el('div');ch.appendChild(bd);
 var top=el('div','ctop');top.appendChild(el('span','cname',p.name));
 if(p.adult)top.appendChild(el('span','badge b-adult','見守り'));
 if(p.guest)top.appendChild(el('span','badge b-walk','ゲスト'));else if(p.walkin)top.appendChild(el('span','badge b-walk','予約なし'));
-if(p.late)top.appendChild(el('span','badge b-late','遅れ'));ch.appendChild(top);
+if(p.late)top.appendChild(el('span','badge b-late','遅れ'));if(!p.hasPhoto&&!p.guest)top.appendChild(el('span','badge b-nophoto','写真まだ'));bd.appendChild(top);
 var sub=key==='yet'?(p.arr+' に来る予定'+(p.time?'（'+p.time+'）':'')):key==='here'?('到着 '+p.at+(p.time?'　予定 '+p.time:'')):(p.at+'〜'+p.out+' にいた');
-ch.appendChild(el('div','csub','No. '+p.no+'　'+sub));g.appendChild(ch)});w.appendChild(g);c.appendChild(w)};
+bd.appendChild(el('div','csub','No. '+p.no+'　'+sub));g.appendChild(ch)});w.appendChild(g);c.appendChild(w)};
 sec('yet','⏳','まだ来ていない',G.yet,'全員そろっています');
 sec('here','🟢','来ている',G.here,'まだ誰も来ていません');
 sec('gone','🚪','帰った',G.gone,'まだ誰も帰っていません');

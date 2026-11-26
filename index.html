@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=5">
+<link rel="stylesheet" href="ui.css?v=6">
 <style>
 .finder{position:relative;border-radius:22px;overflow:hidden;background:#0d1326;aspect-ratio:4/3;margin:12px 0 0}
 .finder video{width:100%;height:100%;object-fit:cover;display:block}
@@ -59,14 +59,19 @@
     <video id="v" playsinline muted></video>
     <div class="frame" id="frame"><i></i><i></i><i></i><i></i></div>
     <div class="hint" id="hint">ネームプレートのQRコードを枠に入れる</div>
+    <div class="shutter hide" id="shutterWrap"><button class="back" id="pcancel">やめる</button><button class="snap" id="snap" aria-label="顔写真を撮る"></button><span style="width:62px"></span></div>
     <div class="start hide" id="startWrap"><button id="cam" class="btn">カメラを始める</button></div>
   </div>
   <canvas id="c" class="hide"></canvas>
 
   <div id="result" class="result r-idle" aria-live="assertive">
+    <img id="face" class="face hide" alt="登録されている顔写真">
     <div class="stamp wait" id="stamp"></div>
     <div><div class="who" id="who2">準備しています</div><div class="what" id="what"></div></div>
   </div>
+
+  <button id="shoot" class="btn quiet hide">顔写真を撮る</button>
+  <div id="confirm" class="two hide"><button id="psave" class="btn">この写真で保存</button><button id="pretry" class="btn quiet">撮り直す</button></div>
 
   <div class="tiles">
     <button class="tile t-yet" data-k="notYet"><div class="num" id="n2">–</div><div class="lab">まだ来ていない</div></button>
@@ -78,7 +83,7 @@
   <details>
     <summary>ネームプレートを忘れた人・日付の変更</summary>
     <label for="manual">管理番号を手で入れる</label>
-    <div class="manual"><input id="manual" placeholder="例 5-01" inputmode="text"><button id="mbtn" class="btn">記録</button></div>
+    <div class="manual"><input id="manual" placeholder="例 Y5-01" inputmode="text"><button id="mbtn" class="btn">記録</button></div>
     <label for="day">活動日</label>
     <input id="day" type="date">
     <small class="foot" id="who"></small>
@@ -116,14 +121,18 @@ var today=new Date(Date.now()+9*3600*1000).toISOString().slice(0,10);
 var last='',lastAt=0,busy=false,camOn=false,L={arrived:[],notYet:[],left:[]},tab='arrived';
 
 /* 読み取りの結果を、はんこと大きな名前で見せる */
-function show(kind,stamp,who,what,pop){var r=$('result');r.className='result r-'+kind;var s=$('stamp');s.textContent=stamp;
+var mode='scan',target=null,shot='';
+function face(src){var f=$('face');if(src){f.src=src;f.className='face';$('result').classList.add('has-face')}else{f.removeAttribute('src');f.className='face hide';$('result').classList.remove('has-face')}}
+function setTarget(r){if(r&&r.no&&!r.guest){target={no:r.no,who:r.who||''};$('shoot').className='btn quiet';$('shoot').textContent=r.hasPhoto?'顔写真を撮り直す':'顔写真を撮る（まだ登録されていません）'}else{target=null;$('shoot').className='btn quiet hide'}}
+function scanMode(){mode='scan';$('shutterWrap').className='shutter hide';$('confirm').className='two hide';$('hint').textContent='ネームプレートのQRコードを枠に入れる'}
+function show(kind,stamp,who,what,pop){var r=$('result');r.className='result r-'+kind+($('face').className==='face'?' has-face':'');var s=$('stamp');s.textContent=stamp;
 s.className='stamp';if(pop){void s.offsetWidth;s.className='stamp pop'}$('who2').textContent=who;$('what').textContent=what||''}
 function showMsg(message,cls,scanned){var i=message.indexOf('\n');var who=i>=0?message.slice(0,i):message;var what=i>=0?message.slice(i+1):'';
 var kind=cls==='out'?'out':cls==='warn'?'warn':cls==='ok'?'ok':'ng';
 var stamp=kind==='out'?'退出':kind==='ng'?'不可':(i>=0?'到着':'済');
 show(kind,stamp,who.replace(/ さん$/,' さん'),what,scanned);
 if(scanned&&navigator.vibrate){try{navigator.vibrate(kind==='ng'?[60,60,60]:kind==='warn'?[120,60,120]:120)}catch(e){}}}
-function idle(){show('idle','受付','読み取りを待っています','')}
+function idle(){face('');setTarget(null);show('idle','受付','読み取りを待っています','')}
 function waiting(){show('idle','','準備しています','名簿と予約を確かめています');$('stamp').className='stamp wait'}
 
 function names(){var box=$('names');box.textContent='';var a=L[tab]||[];var k=tab==='arrived'?'here':tab==='left'?'gone':'yet';
@@ -138,12 +147,12 @@ post({op:code?'scan':'open',device:me.device,key:me.key,day:$('day').value,code:
 if(r.auth===false){stopCam();show('ng','不可','この端末では受付できません',r.message);return}
 lists(r);$('dayLabel').textContent=dayText($('day').value)||'検証用';
 if(!code){idle();return}
-showMsg(r.message,r.cls||'',true)}).catch(function(){busy=false;document.body.classList.remove('busy');show('ng','不可','通信に失敗しました','もう一度かざしてください。',true)})}
+face(r.photo||'');setTarget(r);showMsg(r.message,r.cls||'',true)}).catch(function(){busy=false;document.body.classList.remove('busy');show('ng','不可','通信に失敗しました','もう一度かざしてください。',true)})}
 
 function tick(){if(!camOn)return;var v=$('v');
 if(v.readyState===v.HAVE_ENOUGH_DATA){var c=$('c');c.width=v.videoWidth;c.height=v.videoHeight;var x=c.getContext('2d');x.drawImage(v,0,0);
 var im=x.getImageData(0,0,c.width,c.height);var r=window.jsQR?jsQR(im.data,c.width,c.height):null;
-if(r&&r.data){var now=Date.now();if(r.data!==last||now-lastAt>5000){last=r.data;lastAt=now;send(r.data)}}}
+if(mode==='scan'&&r&&r.data){var now=Date.now();if(r.data!==last||now-lastAt>5000){last=r.data;lastAt=now;send(r.data)}}}
 setTimeout(tick,250)}
 function stopCam(){camOn=false;var v=$('v');if(v.srcObject){v.srcObject.getTracks().forEach(function(t){t.stop()});v.srcObject=null}}
 function camOff(text){$('startWrap').className='start';$('frame').className='frame hide';$('hint').textContent=text}
@@ -172,6 +181,19 @@ if(!save(me)){note('この端末は情報を保存できない設定のため、
 history.replaceState(null,'',location.pathname+location.search);
 openApp()}).catch(function(){document.body.classList.remove('busy');$('regbtn').disabled=false;note('通信に失敗しました。もう一度試してください。')})};
 $('cam').onclick=startCam;
+$('shoot').onclick=function(){if(!target)return;if(!camOn){show('ng','不可','カメラが使えません','カメラを始めてから、もう一度押してください。');return}
+mode='photo';$('shoot').className='btn quiet hide';$('confirm').className='two hide';$('shutterWrap').className='shutter';$('hint').textContent=target.who+' さんの顔を枠に入れて、赤い丸を押す'};
+$('pcancel').onclick=function(){scanMode();setTarget({no:target.no,who:target.who,hasPhoto:$('face').className==='face'})};
+$('snap').onclick=function(){var v=$('v');if(!v.videoWidth)return;var s=Math.min(v.videoWidth,v.videoHeight);var c=document.createElement('canvas');c.width=280;c.height=280;
+c.getContext('2d').drawImage(v,(v.videoWidth-s)/2,(v.videoHeight-s)/2,s,s,0,0,280,280);
+shot=c.toDataURL('image/jpeg',0.72);if(shot.length>46000)shot=c.toDataURL('image/jpeg',0.5);
+mode='confirm';$('shutterWrap').className='shutter hide';$('confirm').className='two';face(shot);show('warn','確認',target.who+' さん','この写真で保存しますか？');$('hint').textContent='下のボタンで、保存するか撮り直すかを選ぶ'};
+$('pretry').onclick=function(){mode='photo';$('confirm').className='two hide';$('shutterWrap').className='shutter';$('hint').textContent=target.who+' さんの顔を枠に入れて、赤い丸を押す'};
+$('psave').onclick=function(){if(busy)return;busy=true;document.body.classList.add('busy');$('psave').disabled=true;
+post({op:'photo',device:me.device,key:me.key,no:target.no,image:shot}).then(function(r){busy=false;document.body.classList.remove('busy');$('psave').disabled=false;
+if(r.auth===false){scanMode();show('ng','不可','この端末では保存できません',r.message);return}
+scanMode();if(r.saved){face(shot);setTarget({no:target.no,who:target.who,hasPhoto:true});showMsg(r.message,'ok',true)}else{showMsg(r.message||'保存できませんでした','ng',true);setTarget({no:target.no,who:target.who,hasPhoto:false})}
+}).catch(function(){busy=false;document.body.classList.remove('busy');$('psave').disabled=false;show('ng','不可','通信に失敗しました','もう一度「この写真で保存」を押してください。',true)})};
 $('mbtn').onclick=function(){var m=$('manual').value.trim();if(m){send('yumeaka:'+m);$('manual').value=''}};
 $('day').onchange=function(){send('')};
 $('forget').onclick=function(){var k=$('forget');

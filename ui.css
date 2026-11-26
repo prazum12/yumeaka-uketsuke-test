@@ -120,3 +120,15 @@ body.busy .band::after{background:linear-gradient(90deg,transparent 0,var(--bran
 .stamp.wait{border-style:dotted;animation:spin 2.4s linear infinite;color:var(--brand);opacity:1!important;font-size:0}
 .btn:disabled{opacity:.55}
 @media (prefers-reduced-motion:reduce){.ring,.stamp.wait,.sk i,body.busy .band::after{animation:none}}
+
+/* 顔写真 */
+.face{width:92px;height:92px;border-radius:16px;object-fit:cover;flex:none;border:3px solid #fff;background:var(--bg)}
+.result.has-face .stamp{width:76px;height:76px;font-size:22px;border-width:5px;margin-left:-34px;align-self:flex-end;background:rgba(255,255,255,.82)}
+.shutter{position:absolute;left:0;right:0;bottom:36px;display:flex;justify-content:center;align-items:center;gap:18px}
+.shutter .snap{width:72px;height:72px;border-radius:50%;border:6px solid #fff;background:var(--late);padding:0}
+.shutter .back{border:0;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font-size:14px;font-weight:700;padding:9px 14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chip.wa{display:flex;gap:10px;align-items:center}
+.ava{width:46px;height:46px;border-radius:12px;background:var(--bg) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-family:var(--round);font-weight:900;font-size:18px;color:var(--ink-2);flex:none}
+.ava.has{color:transparent}
+.b-nophoto{background:var(--line);color:var(--ink-2)}
