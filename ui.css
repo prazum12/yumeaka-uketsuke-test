@@ -132,3 +132,18 @@ body.busy .band::after{background:linear-gradient(90deg,transparent 0,var(--bran
 .ava{width:46px;height:46px;border-radius:12px;background:var(--bg) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-family:var(--round);font-weight:900;font-size:18px;color:var(--ink-2);flex:none}
 .ava.has{color:transparent}
 .b-nophoto{background:var(--line);color:var(--ink-2)}
+
+/* 下からせり上がる確認の面（名前から受け付ける・名簿から選ぶ） */
+.sheet{position:fixed;inset:0;background:rgba(22,33,62,.6);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet-in{background:var(--paper);border-radius:24px 24px 0 0;width:100%;max-width:720px;max-height:88vh;overflow:auto;padding:20px 16px calc(20px + env(safe-area-inset-bottom));animation:rise .18s ease-out}
+@keyframes rise{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet-in{animation:none}}
+.sheet-in .who{font-family:var(--round);font-weight:900;font-size:26px;text-align:center;margin-top:10px}
+.sheet-in .what{text-align:center;color:var(--ink-2);font-weight:700;margin:2px 0 12px}
+.bigface{width:168px;height:168px;border-radius:28px;margin:0 auto;background:var(--bg) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-family:var(--round);font-weight:900;font-size:72px;color:var(--ink-2)}
+.chip.tapme{cursor:pointer;position:relative;padding-right:26px}
+.chip.tapme::after{content:"›";position:absolute;right:9px;top:50%;transform:translateY(-52%);font-size:22px;font-weight:900;color:var(--ink-2);opacity:.55}
+.chip.tapme:active{transform:scale(.98)}
+.chip.off{opacity:.5}
+.tiphint{font-size:12.5px;color:var(--ink-2);margin:0 2px 8px;font-weight:700}
+.group{font-family:var(--round);font-weight:900;font-size:15px;margin:16px 2px 8px;color:var(--ink-2)}

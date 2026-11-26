@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=8">
+<link rel="stylesheet" href="ui.css?v=9">
 <style>
 .finder{position:relative;border-radius:22px;overflow:hidden;background:#0d1326;aspect-ratio:4/3;margin:12px 0 0}
 .finder video{width:100%;height:100%;object-fit:cover;display:block}
@@ -78,12 +78,12 @@
     <button class="tile t-here on" data-k="arrived"><div class="num" id="n1">–</div><div class="lab">来ている</div></button>
     <button class="tile t-gone" data-k="left"><div class="num" id="n3">–</div><div class="lab">帰った</div></button>
   </div>
-  <div class="list"><div class="chips" id="names"><div class="sk" style="margin:0;border:0;padding:4px"><i class="w80"></i><i class="w60"></i></div></div></div>
+  <div class="list"><div class="tiphint" id="tip"></div><div class="chips" id="names"><div class="sk" style="margin:0;border:0;padding:4px"><i class="w80"></i><i class="w60"></i></div></div></div>
+
+  <button id="rosterBtn" class="btn quiet">ネームプレートを忘れた人を、名簿から選ぶ</button>
 
   <details>
-    <summary>ネームプレートを忘れた人・日付の変更</summary>
-    <label for="manual">管理番号を手で入れる</label>
-    <div class="manual"><input id="manual" placeholder="例 Y5-01" inputmode="text"><button id="mbtn" class="btn">記録</button></div>
+    <summary>日付の変更・この端末について</summary>
     <label for="day">活動日</label>
     <input id="day" type="date">
     <small class="foot" id="who"></small>
@@ -91,6 +91,7 @@
   </details>
 </section>
 </main>
+<div id="sheet" class="sheet hide"><div class="sheet-in" id="sheetIn"></div></div>
 
 <nav class="dock hide" id="dock"><div class="dock-in">
   <a href="./" class="on"><b>▣</b>受付</a>
@@ -141,7 +142,36 @@ function waiting(){show('idle','','準備しています','名簿と予約を確
 function names(){var box=$('names');box.textContent='';var a=L[tab]||[];var k=tab==='arrived'?'here':tab==='left'?'gone':'yet';
 box.parentNode.className='list sec s-'+k;
 if(!a.length){box.appendChild(el('div','empty',tab==='notYet'?'全員そろっています':tab==='arrived'?'まだ誰も来ていません':'まだ誰も帰っていません'));return}
-a.forEach(function(t){var m=/^(.*)（(.*)）$/.exec(t);var c=el('div','chip');c.appendChild(el('div','cname',m?m[1]:t));if(m)c.appendChild(el('div','csub',m[2]));box.appendChild(c)})}
+var nos=L[tab+'No']||[];var can=tab!=='left';
+$('tip').textContent=can?(tab==='notYet'?'ネームプレートを忘れた人は、名前を押すと到着を記録できます':'名前を押すと、ネームプレートなしで退出を記録できます'):'';
+a.forEach(function(t,i){var m=/^(.*)（(.*)）$/.exec(t);var nm=m?m[1]:t;var c=el('div','chip'+(can&&nos[i]?' tapme':''));c.appendChild(el('div','cname',nm));if(m)c.appendChild(el('div','csub',m[2]));
+if(can&&nos[i]){c.setAttribute('role','button');c.tabIndex=0;c.onclick=function(){ask(nos[i],nm,tab==='notYet'?'in':'out')}}box.appendChild(c)})}
+function closeSheet(){$('sheet').className='sheet hide';$('sheetIn').textContent=''}
+/* 名前から受け付ける前に、顔写真つきで1回確かめる */
+function ask(no,name,want){var box=$('sheetIn');box.textContent='';$('sheet').className='sheet';
+var av=el('div','bigface',name.slice(0,1));box.appendChild(av);box.appendChild(el('div','who',name+' さん'));
+box.appendChild(el('div','what',want==='in'?'ネームプレートなしで、到着を記録します':'ネームプレートなしで、退出を記録します'));
+var go=el('button','btn',want==='in'?'到着を記録する':'退出を記録する');var no2=el('button','btn quiet','やめる');box.appendChild(go);box.appendChild(no2);
+no2.onclick=closeSheet;go.onclick=function(){closeSheet();tapIn(no,want)};
+if(!/^G-/.test(no))post({op:'face',device:me.device,key:me.key,no:no}).then(function(r){if(r&&r.photo&&$('sheet').className==='sheet'){av.style.backgroundImage='url('+r.photo+')';av.textContent=''}}).catch(function(){})}
+function tapIn(no,want){if(busy)return;busy=true;document.body.classList.add('busy');
+post({op:'tap',device:me.device,key:me.key,day:$('day').value,no:no,want:want}).then(function(r){busy=false;document.body.classList.remove('busy');
+if(r.auth===false){stopCam();show('ng','不可','この端末では受付できません',r.message);return}
+lists(r);face(r.photo||'');setTarget(r);showMsg(r.message,r.cls||'',true);window.scrollTo({top:0,behavior:'smooth'})}).catch(function(){busy=false;document.body.classList.remove('busy');show('ng','不可','通信に失敗しました','もう一度、名前を押してください。',true)})}
+function openRoster(){var box=$('sheetIn');box.textContent='';$('sheet').className='sheet';box.appendChild(el('div','who','名簿から選ぶ'));
+box.appendChild(el('div','what','ネームプレートを忘れた人の名前を押してください'));
+var ld=el('div','loading');ld.appendChild(el('span','ring'));ld.appendChild(document.createTextNode('名簿を読み込んでいます'));box.appendChild(ld);
+var x=el('button','btn quiet','とじる');x.onclick=closeSheet;
+post({op:'roster',device:me.device,key:me.key}).then(function(r){if($('sheet').className!=='sheet')return;ld.remove();
+if(!r||!r.roster){box.appendChild(el('div','note ng',(r&&r.message)||'名簿を読み込めませんでした。'));box.appendChild(x);return}
+var G={},order=[];r.roster.forEach(function(p){if(!G[p.group]){G[p.group]=[];order.push(p.group)}G[p.group].push(p)});
+var rank=function(g){var m=/^(\d+)期$/.exec(g);return m?+m[1]:(g==='メンター'?900:g==='運営'?950:800)};order.sort(function(a,b){return rank(a)-rank(b)});
+order.forEach(function(g){box.appendChild(el('div','group',g));var ch=el('div','chips');
+G[g].forEach(function(p){var here=(L.arrivedNo||[]).indexOf(p.no)>=0,gone=(L.leftNo||[]).indexOf(p.no)>=0,booked=(L.notYetNo||[]).indexOf(p.no)>=0;
+var c=el('div','chip'+(gone?' off':' tapme'));c.appendChild(el('div','cname',p.name));
+c.appendChild(el('div','csub',gone?'もう帰りました':here?'来ています（押すと退出）':booked?'予約あり':'予約なし'));
+if(!gone){c.setAttribute('role','button');c.tabIndex=0;c.onclick=function(){ask(p.no,p.name,here?'out':'in')}}ch.appendChild(c)});box.appendChild(ch)});
+box.appendChild(x)}).catch(function(){ld.remove();box.appendChild(el('div','note ng','通信に失敗しました。もう一度試してください。'));box.appendChild(x)})}
 function lists(r){if(!r||!r.lists)return;L=r.lists;$('n1').textContent=L.arrived.length;$('n2').textContent=L.notYet.length;$('n3').textContent=L.left.length;names()}
 Array.prototype.forEach.call(document.querySelectorAll('.tile'),function(b){b.onclick=function(){tab=b.dataset.k;Array.prototype.forEach.call(document.querySelectorAll('.tile'),function(x){x.className=x.className.replace(/\s*on$/,'')});b.className+=' on';names()}});
 
@@ -227,7 +257,8 @@ post({op:'photo',device:me.device,key:me.key,no:target.no,image:shot}).then(func
 if(r.auth===false){scanMode();show('ng','不可','この端末では保存できません',r.message);return}
 scanMode();if(r.saved){face(shot);setTarget({no:target.no,who:target.who,hasPhoto:true});showMsg(r.message,'ok',true)}else{showMsg(r.message||'保存できませんでした','ng',true);setTarget({no:target.no,who:target.who,hasPhoto:false})}
 }).catch(function(){busy=false;document.body.classList.remove('busy');$('psave').disabled=false;show('ng','不可','通信に失敗しました','もう一度「この写真で保存」を押してください。',true)})};
-$('mbtn').onclick=function(){var m=$('manual').value.trim();if(m){send('yumeaka:'+m);$('manual').value=''}};
+$('rosterBtn').onclick=openRoster;
+$('sheet').onclick=function(e){if(e.target===$('sheet'))closeSheet()};
 $('day').onchange=function(){send('')};
 $('forget').onclick=function(){var k=$('forget');
 if(!k.dataset.sure){k.dataset.sure='1';k.textContent='本当に消す（もう一度押す）';setTimeout(function(){delete k.dataset.sure;k.textContent='この端末の登録を消す'},6000);return}
