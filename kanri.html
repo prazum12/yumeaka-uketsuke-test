@@ -32,6 +32,31 @@ pre{white-space:pre-wrap;font-family:inherit;font-size:14px;line-height:1.7;back
 .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .hide{display:none}
 small{opacity:.65;line-height:1.6;display:block}
+
+.dayhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dayhead h2{margin:0}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 8px}
+.tile{border-radius:14px;padding:12px 6px;text-align:center}
+.tile .num{font-size:34px;font-weight:800;line-height:1}
+.tile .lab{font-size:13px;font-weight:700;margin-top:4px}
+.t-yet{background:#fff1d6;color:#8a5a00}.t-here{background:#d7f0e3;color:#0b6b43}.t-gone{background:#dbe8fb;color:#134a96}
+.bar{display:flex;height:10px;border-radius:999px;overflow:hidden;background:#eee;margin:0 0 6px}
+.seg.t-yet{background:#f2b84b}.seg.t-here{background:#2e9e6b}.seg.t-gone{background:#4a86d8}
+.sec{margin-top:14px;border-radius:14px;padding:10px}
+.s-yet{background:#fff8ea}.s-here{background:#eefaf3}.s-gone{background:#eef4fd}
+.sechead{font-size:15px;font-weight:800;margin:0 2px 8px}
+.s-yet .sechead{color:#8a5a00}.s-here .sechead{color:#0b6b43}.s-gone .sechead{color:#134a96}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.chip{background:#fff;border-radius:12px;padding:9px 11px;border-left:6px solid #ccc}
+.s-yet .chip{border-left-color:#f2b84b}.s-here .chip{border-left-color:#2e9e6b}.s-gone .chip{border-left-color:#4a86d8}
+.chip.late{border-left-color:#d93025;background:#fff5f4}
+.ctop{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cname{font-size:18px;font-weight:800}
+.csub{font-size:12.5px;opacity:.75;margin-top:2px}
+.badge{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px}
+.b-adult{background:#ede3fb;color:#5b2ea6}.b-walk{background:#ffe6cc;color:#9a4a00}.b-late{background:#d93025;color:#fff}
+.empty{font-size:14px;opacity:.7;padding:2px 4px}
+details{margin-top:14px;font-size:14px}summary{font-weight:700;opacity:.8}
 </style>
 </head>
 <body>
@@ -77,13 +102,36 @@ $('nav').className='';$('foot').className='';$('sheet').href=r.sheetUrl;
 $('tDevices').className=r.me.isAdmin?'':'hide';
 var D=$('days');D.textContent='';
 if(!r.days.length)D.appendChild(el('div','card','これからの活動日は登録されていません。'));
-r.days.forEach(function(d){var c=el('div','card');c.appendChild(el('h2','',d.label));
-var m=el('div','meta');m.appendChild(el('div','','開いている時間：'+d.hours+'（みんながそろう時間 '+d.core+'）'));m.appendChild(el('div','','予約の締切：'+d.deadline+(d.closed?'（締切済み。変更と取り消しは受付中）':'')));c.appendChild(m);
-c.appendChild(el('div','big','席 '+d.kids.length+' / 10'));c.appendChild(el('span','floor',d.floor));
-c.appendChild(people('来る予定のメンバー',d.kids));c.appendChild(people('見守る大人',d.adults));
-c.appendChild(line('いま来ている人',d.arrived));c.appendChild(line('帰った人',d.left));
-if(d.walkin.length)c.appendChild(line('予約なしで来た人',d.walkin));
-c.appendChild(line('予約も取り消しもしていないメンバー',d.silent));D.appendChild(c)});
+r.days.forEach(function(d){
+var isToday=d.id===r.today;
+var toMin=function(t){var p=String(t).split(':');return p[0]*60+ +p[1]};
+var all=d.kids.concat(d.adults).concat(d.walkin||[]);
+var G={yet:[],here:[],gone:[]};
+all.forEach(function(p){p.late=isToday&&p.status==='まだ'&&p.arr&&toMin(r.hm)>=toMin(p.arr)+15;G[p.status==='来ている'?'here':p.status==='帰った'?'gone':'yet'].push(p)});
+G.yet.sort(function(a,b){return (b.late?1:0)-(a.late?1:0)||(a.arr<b.arr?-1:1)});
+var c=el('div','card');
+var hd=el('div','dayhead');hd.appendChild(el('h2','',d.label+(isToday?'（今日）':'')));hd.appendChild(el('span','floor',d.floor));c.appendChild(hd);
+var m=el('div','meta');m.appendChild(el('div','','開いている時間 '+d.hours+'　みんながそろう時間 '+d.core));m.appendChild(el('div','','予約の締切 '+d.deadline+(d.closed?'（締切済み。変更と取り消しは受付中）':'')+'　席 '+d.kids.length+' / 10'));c.appendChild(m);
+var tiles=el('div','tiles');
+[['yet','まだ来ていない',G.yet.length],['here','来ている',G.here.length],['gone','帰った',G.gone.length]].forEach(function(t){var b=el('div','tile t-'+t[0]);b.appendChild(el('div','num',String(t[2])));b.appendChild(el('div','lab',t[1]));tiles.appendChild(b)});
+c.appendChild(tiles);
+var total=all.length||1;var bar=el('div','bar');
+[['here',G.here.length],['gone',G.gone.length],['yet',G.yet.length]].forEach(function(t){if(!t[1])return;var sgm=el('div','seg t-'+t[0]);sgm.style.width=(t[1]/total*100)+'%';bar.appendChild(sgm)});
+c.appendChild(bar);
+var sec=function(key,icon,title,list,empty){var w=el('div','sec s-'+key);w.appendChild(el('div','sechead',icon+' '+title+'　'+list.length+'人'));
+if(!list.length){w.appendChild(el('div','empty',empty));c.appendChild(w);return}
+var g=el('div','chips');list.forEach(function(p){var ch=el('div','chip'+(p.late?' late':''));
+var top=el('div','ctop');top.appendChild(el('span','cname',p.name));
+if(p.adult)top.appendChild(el('span','badge b-adult','見守り'));
+if(p.guest)top.appendChild(el('span','badge b-walk','ゲスト'));else if(p.walkin)top.appendChild(el('span','badge b-walk','予約なし'));
+if(p.late)top.appendChild(el('span','badge b-late','遅れ'));ch.appendChild(top);
+var sub=key==='yet'?(p.arr+' に来る予定'+(p.time?'（'+p.time+'）':'')):key==='here'?('到着 '+p.at+(p.time?'　予定 '+p.time:'')):(p.at+'〜'+p.out+' にいた');
+ch.appendChild(el('div','csub','No. '+p.no+'　'+sub));g.appendChild(ch)});w.appendChild(g);c.appendChild(w)};
+sec('yet','⏳','まだ来ていない',G.yet,'全員そろっています');
+sec('here','🟢','来ている',G.here,'まだ誰も来ていません');
+sec('gone','🚪','帰った',G.gone,'まだ誰も帰っていません');
+var det=el('details');det.appendChild(el('summary','','予約も取り消しもしていないメンバー　'+d.silent.length+'人'));det.appendChild(el('div','txt',d.silent.length?d.silent.join('、'):'いません'));c.appendChild(det);
+D.appendChild(c)});
 var V=$('devices');V.textContent='';
 if(r.devices){var c=el('div','card');c.appendChild(el('h2','','受付に使える端末'));var t=el('table');
 r.devices.forEach(function(x){var tr=el('tr');tr.appendChild(el('td','',x.name+(x.mine?'（この端末）':'')));tr.appendChild(el('td','',x.id));tr.appendChild(el('td','',x.at?x.at.slice(0,16):''));
