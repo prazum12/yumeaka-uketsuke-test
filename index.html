@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=6">
+<link rel="stylesheet" href="ui.css?v=7">
 <style>
 .finder{position:relative;border-radius:22px;overflow:hidden;background:#0d1326;aspect-ratio:4/3;margin:12px 0 0}
 .finder video{width:100%;height:100%;object-fit:cover;display:block}
@@ -19,7 +19,7 @@
 .finder .frame i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0}
 .finder .frame i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0}
 .finder .frame i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0}
-.finder .hint{position:absolute;left:0;right:0;bottom:10px;text-align:center;color:#fff;font-family:var(--round);font-weight:700;font-size:14px;text-shadow:0 1px 4px #000}
+.finder .hint{position:absolute;left:10px;right:10px;bottom:10px;text-align:center;color:#fff;font-family:var(--round);font-weight:700;font-size:14px;text-shadow:0 1px 4px #000}
 .finder .start{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px}
 .result{display:flex;align-items:center;gap:16px;border-radius:18px;padding:16px;margin:12px 0;background:var(--paper);border:1px solid var(--line);min-height:138px}
 .result .who{font-family:var(--round);font-weight:900;font-size:30px;line-height:1.2}
@@ -155,12 +155,22 @@ var im=x.getImageData(0,0,c.width,c.height);var r=window.jsQR?jsQR(im.data,c.wid
 if(mode==='scan'&&r&&r.data){var now=Date.now();if(r.data!==last||now-lastAt>5000){last=r.data;lastAt=now;send(r.data)}}}
 setTimeout(tick,250)}
 function stopCam(){camOn=false;var v=$('v');if(v.srcObject){v.srcObject.getTracks().forEach(function(t){t.stop()});v.srcObject=null}}
-function camOff(text){$('startWrap').className='start';$('frame').className='frame hide';$('hint').textContent=text}
+function camOff(text){$('startWrap').className='start';$('frame').className='frame hide';$('shutterWrap').className='shutter hide';$('hint').textContent=text}
+var camTry=0;
 function startCam(){
 if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camOff('この画面ではカメラが使えません。下の欄から管理番号を入れてください。');return}
-navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(s){var v=$('v');v.srcObject=s;
+stopCam();var my=++camTry;
+$('startWrap').className='start hide';$('frame').className='frame hide';$('hint').textContent='カメラを準備しています。許可を聞かれたら「許可」を選んでください';
+/* 許可の画面が出ない・返事が返らない機種があるので、数秒たっても始まらなければボタンを出す */
+setTimeout(function(){if(my===camTry&&!camOn)camOff('カメラが始まりません。下のボタンを押してください')},4500);
+navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(s){if(my!==camTry){s.getTracks().forEach(function(t){t.stop()});return}
+var v=$('v');v.srcObject=s;s.getTracks().forEach(function(t){t.onended=function(){if(my===camTry){camOn=false;camOff('カメラが止まりました。下のボタンを押してください')}}});
 $('startWrap').className='start hide';$('frame').className='frame';$('hint').textContent='ネームプレートのQRコードを枠に入れる';
-var p=v.play();if(p&&p.catch)p.catch(function(){});camOn=true;tick()}).catch(function(e){camOff('カメラを開けませんでした（'+e.name+'）')})}
+var p=v.play();if(p&&p.catch)p.catch(function(){});camOn=true;scanMode();tick()}).catch(function(e){if(my!==camTry)return;camOn=false;camOff('カメラを開けませんでした（'+e.name+'）。下のボタンでもう一度試せます')})}
+/* ほかの画面へ移るときはカメラを手放し、戻ってきたら始め直す */
+window.addEventListener('pagehide',function(){camTry++;stopCam()});
+window.addEventListener('pageshow',function(e){if(e.persisted&&me&&me.device)startCam()});
+document.addEventListener('visibilitychange',function(){if(document.visibilityState!=='visible'||!me||!me.device)return;var v=$('v');var live=v.srcObject&&v.srcObject.getTracks().some(function(t){return t.readyState==='live'});if(!live)startCam()});
 
 function openApp(){$('reg').className='hide';$('app').className='';$('dock').className='dock';note('');
 $('who').textContent='この端末：'+me.name+'（'+me.device+'）';
