@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>夢アカ 運営画面（検証用）</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;margin:0;background:#f4f1ea;color:#1c2540}
+main{max-width:760px;margin:0 auto;padding:14px}
+h1{font-size:18px;margin:6px 0 2px}
+#who{font-size:14px;opacity:.75;margin:0 0 10px}
+nav{display:flex;gap:8px;margin:10px 0 14px;flex-wrap:wrap}
+nav a,nav button{font-size:15px;padding:10px 14px;border-radius:999px;border:0;background:#e0ddd4;color:#1c2540;text-decoration:none;font-weight:700}
+nav button.on{background:#1c2540;color:#fff}
+.card{background:#fff;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{font-size:20px;margin:0 0 6px}
+.meta{font-size:14px;line-height:1.7;opacity:.8}
+.big{font-size:26px;font-weight:700;margin:8px 0 2px}
+.floor{display:inline-block;padding:4px 10px;border-radius:8px;background:#e6f4f1;color:#00796b;font-weight:700;font-size:14px}
+h3{font-size:14px;margin:14px 0 4px;opacity:.7}
+table{width:100%;border-collapse:collapse;font-size:15px}
+td{padding:7px 4px;border-top:1px solid #eee;vertical-align:top}
+.tag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:700}
+.here{background:#d7f0e3;color:#0b6b43}.yet{background:#f0f0f0;color:#666}.stop{background:#fbdcda;color:#9a1c14}.live{background:#d7f0e3;color:#0b6b43}
+.txt{font-size:15px;line-height:1.7}
+button.act{font-size:14px;padding:8px 12px;border-radius:10px;border:0;background:#009688;color:#fff;font-weight:700}
+button.warn{background:#b3261e}button.sub{background:#e0e0e0;color:#333}
+#msg{margin:10px 0;padding:12px;border-radius:12px;font-size:16px;font-weight:700;white-space:pre-line;display:none}
+.ok{background:#d7f0e3;color:#0b6b43}.ng{background:#fbdcda;color:#9a1c14}
+pre{white-space:pre-wrap;font-family:inherit;font-size:14px;line-height:1.7;background:#f7f7f7;border-radius:10px;padding:10px;margin:8px 0}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.hide{display:none}
+small{opacity:.65;line-height:1.6;display:block}
+</style>
+</head>
+<body>
+<main>
+<h1>夢アカ 運営画面（検証用）</h1>
+<p id="who">読み込んでいます…</p>
+<nav id="nav" class="hide">
+  <button data-tab="days" class="on">活動日</button>
+  <button data-tab="drafts" id="tDrafts">保護者への控え</button>
+  <button data-tab="devices" id="tDevices">受付の端末</button>
+  <a href="./">受付の画面へ</a>
+</nav>
+<div id="msg"></div>
+<div id="days"></div>
+<div id="drafts" class="hide"></div>
+<div id="devices" class="hide"></div>
+<div id="foot" class="hide"><small>細かい修正が必要なときは、<a id="sheet" target="_blank" rel="noopener">もとの表（スプレッドシート）</a>を開いてください。</small></div>
+</main>
+<script>
+(function(){
+var API='https://yasuulab-n8n.xvps.jp/webhook/yumeaka-yoyaku-kanri-api-4c81d9';
+var STORE='yumeaka_uketsuke_v1';
+var $=function(i){return document.getElementById(i)};
+var me=null;try{me=JSON.parse(localStorage.getItem(STORE)||'null')}catch(e){}
+var busy=false;
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
+function msg(t,c){var m=$('msg');m.textContent=t||'';m.className=c||'';m.style.display=t?'block':'none'}
+function call(o,keep){if(busy)return;busy=true;var b=new URLSearchParams();o.device=me.device;o.key=me.key;for(var k in o)b.set(k,o[k]);
+fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;
+if(r.auth===false){$('who').textContent='';$('nav').className='hide';['days','drafts','devices'].forEach(function(i){$(i).textContent=''});msg(r.message+'\n受付の画面から、端末を登録し直してください。','ng');return}
+if(r.reload){if(r.self){msg('この端末を止めました。','ok');return}var m=r.message,c=r.cls;busy=false;load(function(){msg(m,c)});return}
+render(r);if(!keep)msg('')}).catch(function(){busy=false;msg('通信に失敗しました。もう一度試してください。','ng')})}
+function load(after){busy=false;var b=new URLSearchParams();b.set('op','overview');b.set('device',me.device);b.set('key',me.key);busy=true;
+fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;if(r.auth===false){msg(r.message,'ng');return}render(r);if(after)after()}).catch(function(){busy=false;msg('通信に失敗しました。','ng')})}
+function people(title,list){var w=document.createDocumentFragment();w.appendChild(el('h3','',title+'（'+list.length+'人）'));
+if(!list.length){w.appendChild(el('div','txt','いません'));return w}
+var t=el('table');list.forEach(function(p){var tr=el('tr');tr.appendChild(el('td','',p.name));tr.appendChild(el('td','','No. '+p.no));tr.appendChild(el('td','',p.time));
+var td=el('td');td.appendChild(el('span','tag '+(p.here?'here':'yet'),p.here?'来ている':'まだ'));tr.appendChild(td);t.appendChild(tr)});w.appendChild(t);return w}
+function line(title,arr){var w=document.createDocumentFragment();w.appendChild(el('h3','',title+'（'+arr.length+'人）'));w.appendChild(el('div','txt',arr.length?arr.join('、'):'いません'));return w}
+function copy(text,btn){var done=function(){var o=btn.textContent;btn.textContent='コピーしました';setTimeout(function(){btn.textContent=o},1500)};
+if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(function(){msg('コピーできませんでした。文面を長押しして選んでください。','ng')})}else msg('この端末ではコピーのボタンが使えません。文面を長押しして選んでください。','ng')}
+function render(r){
+$('who').textContent=r.me.name+' さんの端末（'+r.me.device+'）'+(r.me.isAdmin?'':'　※リーダーズ用の表示です');
+$('nav').className='';$('foot').className='';$('sheet').href=r.sheetUrl;
+$('tDrafts').className=r.me.isAdmin?'':'hide';$('tDevices').className=r.me.isAdmin?'':'hide';
+var D=$('days');D.textContent='';
+if(!r.days.length)D.appendChild(el('div','card','これからの活動日は登録されていません。'));
+r.days.forEach(function(d){var c=el('div','card');c.appendChild(el('h2','',d.label));
+var m=el('div','meta');m.appendChild(el('div','','開いている時間：'+d.hours+'（みんながそろう時間 '+d.core+'）'));m.appendChild(el('div','','予約の締切：'+d.deadline+(d.closed?'（締切済み。変更と取り消しは受付中）':'')));c.appendChild(m);
+c.appendChild(el('div','big','席 '+d.kids.length+' / 10'));c.appendChild(el('span','floor',d.floor));
+c.appendChild(people('来る予定のメンバー',d.kids));c.appendChild(people('見守る大人',d.adults));
+c.appendChild(line('いま来ている人',d.arrived));c.appendChild(line('帰った人',d.left));
+if(d.walkin.length)c.appendChild(line('予約なしで来た人',d.walkin));
+c.appendChild(line('予約も取り消しもしていないメンバー',d.silent));D.appendChild(c)});
+var F=$('drafts');F.textContent='';
+if(r.drafts){if(!r.drafts.length)F.appendChild(el('div','card','いま確認する控えはありません。締切の集計のあとに、ここへ並びます。'));
+r.drafts.forEach(function(x){var c=el('div','card');c.appendChild(el('h2','',x.name+' さんの保護者あて'));
+var sent=x.state.indexOf('送信済み')===0;var m=el('div','meta');m.appendChild(el('div','',x.day+'の予約の控え'));var s=el('span','tag '+(sent?'here':'yet'),x.state);m.appendChild(s);c.appendChild(m);
+c.appendChild(el('h3','','宛先'));c.appendChild(el('div','txt',x.to));c.appendChild(el('h3','','件名'));c.appendChild(el('div','txt',x.subject));c.appendChild(el('h3','','本文'));c.appendChild(el('pre','',x.body));
+var b=el('div','btns');[['宛先をコピー',x.to],['件名をコピー',x.subject],['本文をコピー',x.body]].forEach(function(p){var k=el('button','act sub',p[0]);k.onclick=function(){copy(p[1],k)};b.appendChild(k)});
+if(!sent){var k=el('button','act','自分で送ったので印をつける');k.onclick=function(){call({op:'draftDone',row:x.row})};b.appendChild(k)}
+c.appendChild(b);F.appendChild(c)});
+var n=el('small','','この画面からメールは送られません。文面を確かめて、ご自身のメールから送ってください。');F.appendChild(n)}
+var V=$('devices');V.textContent='';
+if(r.devices){var c=el('div','card');c.appendChild(el('h2','','受付に使える端末'));var t=el('table');
+r.devices.forEach(function(x){var tr=el('tr');tr.appendChild(el('td','',x.name+(x.mine?'（この端末）':'')));tr.appendChild(el('td','',x.id));tr.appendChild(el('td','',x.at?x.at.slice(0,16):''));
+var td=el('td');td.appendChild(el('span','tag '+(x.state==='有効'?'live':x.state==='停止'?'stop':'yet'),x.state));tr.appendChild(td);
+var a=el('td');if(x.state==='有効'){var k=el('button','act warn','止める');k.onclick=function(){if(k.dataset.sure){call({op:'stopDevice',target:x.id})}else{k.dataset.sure='1';k.textContent=x.mine?'この端末を止める（もう一度押す）':'本当に止める';setTimeout(function(){delete k.dataset.sure;k.textContent='止める'},4000)}};a.appendChild(k)}tr.appendChild(a);t.appendChild(tr)});
+c.appendChild(t);c.appendChild(el('small','','新しい端末の登録は、Discordの「受付の端末を登録する」ボタンから行います。止めた端末は、登録し直すまで使えません。'));V.appendChild(c)}
+}
+Array.prototype.forEach.call(document.querySelectorAll('nav button'),function(b){b.onclick=function(){Array.prototype.forEach.call(document.querySelectorAll('nav button'),function(x){x.className=x.className.replace(/\s*on/,'')});b.className=(b.className+' on').trim();['days','drafts','devices'].forEach(function(i){$(i).className=i===b.dataset.tab?'':'hide'})}});
+if(!me||!me.device||!me.key){$('who').textContent='';msg('この端末は登録されていません。\n受付の画面から登録してください。','ng');var a=el('a','','受付の画面へ');a.href='./';$('days').appendChild(a)}else load();
+})();
+</script>
+</body>
+</html>

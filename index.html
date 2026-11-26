@@ -49,6 +49,7 @@ small{opacity:.7;line-height:1.6;display:block}
   <label>活動日</label>
   <input id="day" type="date">
   <small id="who"></small>
+  <a id="kanri" href="kanri.html" style="display:block;text-align:center;margin:10px 0;padding:12px;border-radius:10px;background:#3a4670;color:#fff;text-decoration:none;font-size:15px">運営画面を開く（予約・出欠・端末の一覧）</a>
   <button id="forget" class="sub">この端末の登録を消す</button>
 </div>
 
@@ -58,6 +59,7 @@ small{opacity:.7;line-height:1.6;display:block}
 <script>
 (function(){
 var API='https://yasuulab-n8n.xvps.jp/webhook/yumeaka-yoyaku-uketsuke-api-5f0c2b';
+var KANRI='https://yasuulab-n8n.xvps.jp/webhook/yumeaka-yoyaku-kanri-api-4c81d9';
 var STORE='yumeaka_uketsuke_v1';
 var $=function(i){return document.getElementById(i)};
 function load(){try{return JSON.parse(localStorage.getItem(STORE)||'null')}catch(e){return null}}
@@ -65,7 +67,8 @@ function save(o){try{localStorage.setItem(STORE,JSON.stringify(o));return true}c
 function clear(){try{localStorage.removeItem(STORE)}catch(e){}}
 function show(t,c){var m=$('msg');m.textContent=t;m.className=c||''}
 function note(t){var m=$('msg0');m.textContent=t;m.className='box'+(t?'':' hide')}
-function post(o){var b=new URLSearchParams();for(var k in o)b.set(k,o[k]);return fetch(API,{method:'POST',body:b}).then(function(x){return x.json()})}
+function postTo(u,o){var b=new URLSearchParams();for(var k in o)b.set(k,o[k]);return fetch(u,{method:'POST',body:b}).then(function(x){return x.json()})}
+function post(o){return postTo(API,o)}
 function randHex(n){var a=new Uint8Array(n);crypto.getRandomValues(a);var s='';for(var i=0;i<n;i++)s+=('0'+a[i].toString(16)).slice(-2);return s}
 
 var me=load();
@@ -100,9 +103,11 @@ var p=v.play();if(p&&p.catch)p.catch(function(){});camOn=true;tick()}).catch(fun
 show('カメラを開けませんでした（'+e.name+'）。\n「カメラを始める」を押すか、管理番号を手で入力してください。','warn')})}
 
 function openApp(){$('reg').className='hide';$('app').className='';note('');
-$('day').value=q.get('day')||today;
 $('who').textContent='この端末：'+me.name+'（'+me.device+'）';
-send('');startCam()}
+startCam();
+if(q.get('day')){$('day').value=q.get('day');send('');return}
+$('day').value=today;
+postTo(KANRI,{op:'nextday',device:me.device,key:me.key}).then(function(r){if(r&&r.day)$('day').value=r.day;send('')}).catch(function(){send('')})}
 
 function openReg(){$('app').className='hide';$('reg').className='';
 var h=new URLSearchParams(location.hash.replace(/^#/,''));if(h.get('t'))$('code').value=h.get('t')}
@@ -120,7 +125,11 @@ openApp()}).catch(function(e){note('通信に失敗しました。もう一度�
 $('cam').onclick=startCam;
 $('mbtn').onclick=function(){var m=$('manual').value.trim();if(m){send('yumeaka:'+m);$('manual').value=''}};
 $('day').onchange=function(){send('')};
-$('forget').onclick=function(){if(window.confirm('この端末の登録を消します。もう一度使うには、Discordからの登録が必要です。')){stopCam();clear();me=null;openReg()}};
+$('forget').onclick=function(){var k=$('forget');
+if(!k.dataset.sure){k.dataset.sure='1';k.textContent='本当に消す（もう一度押す）';setTimeout(function(){delete k.dataset.sure;k.textContent='この端末の登録を消す'},4000);return}
+delete k.dataset.sure;k.textContent='この端末の登録を消す';stopCam();var old=me;
+var fin=function(){clear();me=null;openReg()};
+postTo(KANRI,{op:'forget',device:old.device,key:old.key}).then(fin).catch(fin)};
 
 if(me&&me.device&&me.key)openApp();else openReg();
 })();
