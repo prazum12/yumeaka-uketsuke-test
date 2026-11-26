@@ -6,11 +6,11 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#16213e">
-<title>夢アカ 予約（検証用）</title>
+<title>夢アカ マイページ（検証用）</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=22">
+<link rel="stylesheet" href="ui.css?v=23">
 <script src="log.js?v=5"></script>
 <style>
 body{padding-bottom:24px}
@@ -47,9 +47,11 @@ body{padding-bottom:24px}
 <body>
 <header class="band"><div class="band-in">
   <div class="mark">横須賀プログラミング"夢"アカデミー</div>
-  <div class="band-title">活動日の予約<small>検証用</small></div>
+  <div class="band-title">マイページ<small>検証用</small></div>
 </div></header>
 <main>
+<nav class="mytabs" aria-label="マイページの中の移動"><a id="tabY" class="on">予約・講義</a><a id="tabM" class="">ネームプレート・登録</a></nav>
+<script>(function(){var h=location.hash||'';document.getElementById('tabY').href='yoyaku.html'+h;document.getElementById('tabM').href='my.html'+h})();</script>
 <p class="hello" id="who"></p>
 <div class="loading" id="load"><span class="ring"></span>予約のようすを確かめています</div>
 <div id="msg" class="note hide"></div>

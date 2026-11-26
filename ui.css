@@ -225,3 +225,9 @@ input[type=time]:focus-visible,select:focus-visible,textarea:focus-visible{outli
 #plan .lec{flex-direction:row;flex-wrap:wrap;align-items:center}
 #plan .lec .lectx{flex:1 1 220px}
 .rowbtn{display:flex;gap:8px;flex-wrap:wrap}
+
+/* マイページの中の移動（予約・講義／ネームプレート・登録） */
+.mytabs{display:flex;gap:6px;margin:12px 0 6px;border-bottom:2px solid var(--line)}
+.mytabs a{flex:1;text-align:center;padding:12px 6px;font-weight:700;font-size:15px;color:var(--ink-2);text-decoration:none;border-bottom:3px solid transparent;margin-bottom:-2px;border-radius:8px 8px 0 0}
+.mytabs a.on{color:var(--brand);border-bottom-color:var(--brand)}
+.mytabs a:focus-visible{outline:3px solid var(--sky);outline-offset:-3px}
