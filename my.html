@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#16213e">
+<title>夢アカ 自分の登録（検証用）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ui.css?v=11">
+<style>
+body{padding-bottom:24px}
+/* ネームプレートと同じ並び：紺の帯、色の線、大きな呼び名、番号 */
+.plate{background:var(--paper);border-radius:18px;overflow:hidden;border:1px solid var(--line);margin:14px 0}
+.plate .top{background:var(--ink);color:#fff;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;font-family:var(--round);font-weight:900;letter-spacing:.1em;font-size:13px}
+.plate .role{font-size:12px;letter-spacing:0;padding:2px 10px;border-radius:999px;background:var(--brand)}
+.plate .role.r-m{background:#e8730c}.plate .role.r-s{background:#6a3fc4}
+.plate .in{display:flex;gap:14px;align-items:center;padding:16px;border-left:8px solid var(--brand)}
+.plate .in.r-m{border-left-color:#e8730c}.plate .in.r-s{border-left-color:#6a3fc4}
+.plate .nm{font-family:var(--round);font-weight:900;font-size:32px;line-height:1.15;word-break:break-all}
+.plate .no{display:inline-block;margin-top:8px;font-family:var(--round);font-weight:900;font-size:18px;border:3px solid currentColor;border-radius:10px;padding:1px 10px;color:var(--brand)}
+.plate .in.r-m .no{color:#e8730c}.plate .in.r-s .no{color:#6a3fc4}
+.pface{width:104px;height:104px;border-radius:18px;background:var(--bg) center/cover no-repeat;flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--round);font-weight:900;font-size:44px;color:var(--ink-2)}
+.step{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+.step h2{font-size:19px}
+.done{margin-left:auto;font-family:var(--round);font-weight:900;font-size:13px;color:var(--here-ink);background:var(--here-bg);border-radius:999px;padding:3px 12px;white-space:nowrap}
+.todo{margin-left:auto;font-family:var(--round);font-weight:900;font-size:13px;color:var(--yet-ink);background:var(--yet-bg);border-radius:999px;padding:3px 12px;white-space:nowrap}
+.cam{position:relative;border-radius:22px;overflow:hidden;background:#0d1326;aspect-ratio:1/1;max-width:360px;margin:12px auto 0}
+.cam video,.cam img{width:100%;height:100%;object-fit:cover;display:block}
+.cam .hint{position:absolute;left:10px;right:10px;bottom:10px;text-align:center;color:#fff;font-family:var(--round);font-weight:700;font-size:14px;text-shadow:0 1px 4px #000}
+.cam .shutter{bottom:38px}
+</style>
+</head>
+<body>
+<header class="band"><div class="band-in">
+  <div class="mark">YUME ACADEMY<small>横須賀プログラミング"夢"アカデミー</small></div>
+  <div class="band-title">自分の登録<small>検証用</small></div>
+</div></header>
+<main>
+<div class="loading" id="load"><span class="ring"></span>登録の内容を確かめています</div>
+<div id="msg" class="note hide"></div>
+
+<div id="body" class="hide">
+  <div class="plate">
+    <div class="top"><span>YUME ACADEMY</span><span class="role" id="role"></span></div>
+    <div class="in" id="plateIn"><div class="pface" id="pface"></div><div><div class="nm" id="pname"></div><div class="no" id="pno"></div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="step"><h2>登録の内容を確かめる</h2><span id="s1"></span></div>
+    <p class="txt">ネームプレートに載る呼び名です。変えたい場合は、ここで直してください。</p>
+    <label for="name">呼び名（12文字まで）</label>
+    <input id="name" maxlength="12" autocomplete="off">
+    <button id="ok" class="btn">この内容で確認する</button>
+  </div>
+
+  <div class="card" id="photoCard">
+    <div class="step"><h2>顔写真を登録する</h2><span id="s2"></span></div>
+    <p class="txt" id="ptxt">運営とメンターだけが見られる写真です。受付で、顔と名前を確かめるために使います。</p>
+    <div class="cam hide" id="cam">
+      <video id="v" playsinline muted></video>
+      <img id="shotImg" class="hide" alt="いま撮った写真">
+      <div class="hint" id="hint"></div>
+      <div class="shutter" id="shutterWrap"><button class="back" id="pcancel">やめる</button><button class="snap" id="snap" aria-label="撮る"></button><button class="back" id="flip">外側のカメラ</button></div>
+    </div>
+    <div id="confirm" class="two hide"><button id="psave" class="btn">この写真で登録</button><button id="pretry" class="btn quiet">撮り直す</button></div>
+    <button id="shoot" class="btn">顔写真を撮る</button>
+  </div>
+
+  <a class="btn quiet" id="toYoyaku" style="text-align:center;text-decoration:none">活動日の予約へ</a>
+  <small class="foot">このページのアドレスは、あなた専用です。ほかの人には教えないでください。</small>
+</div>
+</main>
+<script>
+(function(){
+var API='https://yasuulab-n8n.xvps.jp/webhook/yumeaka-yoyaku-page-api-e7b204';
+var $=function(i){return document.getElementById(i)};
+var key=new URLSearchParams(location.hash.replace(/^#/,'')).get('k')||'';
+var busy=false,P=null,facing='user',stream=null,shot='',camTry=0;
+function msg(t,c){var m=$('msg');m.textContent=t||'';m.className='note '+(c||'ng')+(t?'':' hide')}
+function call(o,done){if(busy)return;busy=true;document.body.classList.add('busy');var b=new URLSearchParams();o.key=key;for(var k in o)b.set(k,o[k]);
+fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;document.body.classList.remove('busy');$('load').className='loading hide';done(r)})
+.catch(function(){busy=false;document.body.classList.remove('busy');$('load').className='loading hide';$('psave').disabled=false;msg('通信に失敗しました。もう一度試してください。','ng')})}
+function setFace(src){var f=$('pface');if(src){f.style.backgroundImage='url('+src+')';f.textContent=''}else{f.style.backgroundImage='';f.textContent=P?P.name.slice(0,1):''}}
+function render(r){
+if(!r.ok||!r.profile){$('body').className='hide';msg(r.message||'このリンクは使えません。','ng');return}
+P=r.profile;$('body').className='';msg(r.message||'',r.cls||'ok');
+var k=P.group==='メンター'?'r-m':P.group==='運営'?'r-s':'';
+$('role').textContent=P.group;$('role').className='role '+k;$('plateIn').className='in '+k;
+$('pname').textContent=P.name;$('pno').textContent='No. '+P.no;
+if(document.activeElement!==$('name'))$('name').value=P.name;
+if(r.photo)setFace(r.photo);else if(!P.hasPhoto)setFace('');
+$('s1').textContent=P.confirmedAt?'確認済み':'まだ';$('s1').className=P.confirmedAt?'done':'todo';
+$('ok').textContent=P.confirmedAt?'呼び名を直して、もう一度確認する':'この内容で確認する';
+if(P.canSelfPhoto){$('photoCard').className='card';$('s2').textContent=P.hasPhoto?'登録済み':'まだ';$('s2').className=P.hasPhoto?'done':'todo';$('shoot').textContent=P.hasPhoto?'顔写真を撮り直す':'顔写真を撮る'}
+else{$('photoCard').className='card';$('s2').textContent='';$('ptxt').textContent='顔写真は、活動日に受付で撮ります。ここでの登録は不要です。';$('shoot').className='btn hide'}
+$('toYoyaku').href='yoyaku.html#k='+encodeURIComponent(key)}
+
+function stopCam(){camTry++;if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}$('v').srcObject=null}
+function startCam(){stopCam();var my=camTry;$('cam').className='cam';$('shotImg').className='hide';$('v').className='';$('shutterWrap').className='shutter';
+$('hint').textContent='カメラを準備しています。許可を聞かれたら「許可」を選んでください';
+if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){$('hint').textContent='この画面ではカメラが使えません';return}
+navigator.mediaDevices.getUserMedia({video:{facingMode:facing}}).then(function(s){if(my!==camTry){s.getTracks().forEach(function(t){t.stop()});return}
+stream=s;var v=$('v');v.srcObject=s;v.style.transform=facing==='user'?'scaleX(-1)':'';$('flip').textContent=facing==='user'?'外側のカメラ':'内側のカメラ';
+var p=v.play();if(p&&p.catch)p.catch(function(){});$('hint').textContent='顔を真ん中に入れて、赤い丸を押す'})
+.catch(function(e){if(my!==camTry)return;$('hint').textContent=(e.name==='NotAllowedError'?'カメラの使用が許可されていません。ブラウザの設定で許可してから、もう一度押してください':'カメラを開けませんでした（'+e.name+'）。もう一度「顔写真を撮る」を押してください');$('shutterWrap').className='shutter hide';$('shoot').className='btn'})}
+function closeCam(){stopCam();$('cam').className='cam hide';$('confirm').className='two hide';$('shoot').className='btn'}
+
+$('ok').onclick=function(){var n=$('name').value.replace(/\s+/g,' ').trim();if(!n){msg('呼び名を入れてください。','ng');return}call({op:'confirm',name:n},render)};
+$('shoot').onclick=function(){msg('');$('shoot').className='btn hide';startCam()};
+$('pcancel').onclick=closeCam;
+$('flip').onclick=function(){facing=facing==='user'?'environment':'user';startCam()};
+$('snap').onclick=function(){var v=$('v');if(!v.videoWidth)return;var s=Math.min(v.videoWidth,v.videoHeight);var c=document.createElement('canvas');c.width=280;c.height=280;
+c.getContext('2d').drawImage(v,(v.videoWidth-s)/2,(v.videoHeight-s)/2,s,s,0,0,280,280);
+shot=c.toDataURL('image/jpeg',0.72);if(shot.length>46000)shot=c.toDataURL('image/jpeg',0.5);
+stopCam();$('v').className='hide';$('shotImg').src=shot;$('shotImg').className='';$('shutterWrap').className='shutter hide';$('hint').textContent='この写真でよければ、下の「この写真で登録」を押す';$('confirm').className='two'};
+$('pretry').onclick=function(){$('confirm').className='two hide';startCam()};
+$('psave').onclick=function(){$('psave').disabled=true;call({op:'photo',image:shot},function(r){$('psave').disabled=false;
+if(r.saved){closeCam();render(r);setFace(shot)}else{msg(r.message||'登録できませんでした。','ng')}})};
+window.addEventListener('pagehide',stopCam);
+
+if(!key){$('load').className='loading hide';msg('このページは、あなた専用のリンクから開いてください。','ng')}else call({op:'me'},render);
+})();
+</script>
+</body>
+</html>
