@@ -82,6 +82,7 @@ button{font-family:var(--round);cursor:pointer}
 .btn:active{transform:translateY(1px)}
 .act{font-size:14px;padding:8px 12px;border-radius:10px;border:0;background:var(--brand);color:#fff;font-weight:700}
 .act.warn{background:var(--late)}
+.act.quiet{background:transparent;color:var(--late);border:1px solid currentColor;font-size:12px;padding:5px 9px;font-weight:600}
 input[type=text],input[type=date],input:not([type]){font:inherit;font-size:17px;padding:12px;border-radius:12px;border:2px solid var(--line);width:100%;background:var(--paper);color:var(--ink)}
 label{font-size:13px;font-weight:700;color:var(--ink-2);display:block;margin:10px 0 4px}
 .note{margin:10px 0;padding:12px 14px;border-radius:12px;font-size:15.5px;font-weight:700;white-space:pre-line}

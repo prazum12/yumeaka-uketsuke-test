@@ -101,7 +101,7 @@ var act=r.people.filter(function(p){return !p.state||p.state==='在籍'});var nC
 pc.appendChild(el('div','meta','在籍 '+act.length+'人　本人の確認 '+nC+'人　顔写真 '+nP+'人'+(nL?'　在籍でないのに写真が残っている人 '+nL+'人':'')));
 var pt=el('table');r.people.forEach(function(p){var tr=el('tr');var a=el('td');a.appendChild(el('div','cname',p.name));a.appendChild(el('div','csub','No. '+p.no+'　'+p.group+((p.state&&p.state!=='在籍')?'　名簿の状態：'+p.state:'')));tr.appendChild(a);
 [[p.confirmed,'確認済み','確認まだ'],[p.hasPhoto,'写真あり','写真まだ'],[p.linked,'Discord結びつき済み',p.discordOk?'Discordまだ':'Discordなし']].forEach(function(x,i){var td=el('td');td.appendChild(el('span','tag '+(x[0]?'live':'yet'),x[0]?x[1]:x[2]));
-if(i===1&&p.hasPhoto&&r.me.isAdmin){var k=el('button','act warn','写真を消す');k.style.display='block';k.style.marginTop='6px';k.onclick=function(){if(k.dataset.sure){call({op:'removePhoto',target:p.no})}else{k.dataset.sure='1';k.textContent='本当に消す（戻せません）';setTimeout(function(){delete k.dataset.sure;k.textContent='写真を消す'},6000)}};td.appendChild(k)}
+if(i===1&&p.hasPhoto&&r.me.isAdmin){var k=el('button','act quiet','写真を消す');k.style.display='block';k.style.marginTop='6px';k.onclick=function(){if(k.dataset.sure){call({op:'removePhoto',target:p.no})}else{k.dataset.sure='1';k.className='act warn';k.textContent='本当に消す（戻せません）';setTimeout(function(){delete k.dataset.sure;k.className='act quiet';k.textContent='写真を消す'},6000)}};td.appendChild(k)}
 tr.appendChild(td)});pt.appendChild(tr)});
 pc.appendChild(pt);pc.appendChild(el('small','foot','運営とメンターは、Discordの「自分の登録を確かめる」ボタンから、本人が確認と顔写真の登録をします。メンバーの顔写真は、活動日に受付で撮ります。'+(r.me.isAdmin?'退会・修了した人の顔写真は「写真を消す」で消します。消した写真は元に戻せません。':'')));Q.appendChild(pc)}
 var V=$('devices');V.textContent='';
