@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="ui.css?v=16">
+<script src="log.js?v=1"></script>
 <style>
 .finder{position:relative;border-radius:22px;overflow:hidden;background:#0d1326;aspect-ratio:4/3;margin:12px 0 0}
 .finder video{width:100%;height:100%;object-fit:cover;display:block}
@@ -210,6 +211,7 @@ var p=v.play();if(p&&p.catch)p.catch(function(){});camOn=true;
 if(mode==='photo'&&target){$('shutterWrap').className='shutter';$('hint').textContent=photoHint()}else if(mode==='confirm'){$('hint').textContent='下のボタンで、保存するか撮り直すかを選ぶ'}else scanMode();
 tick(my)}).catch(function(e){if(my!==camTry)return;pendAt=0;camOn=false;
 /* 許可されていない場合は、自動では直せないので止めて知らせる */
+if(window.YumeLog)YumeLog('カメラを開く','失敗',String(e.name||e));
 if(e.name==='NotAllowedError'||e.name==='SecurityError'){wd.blocked=true;camOff('カメラの使用が許可されていません。ブラウザの設定で許可してから、下のボタンを押してください');return}
 camOff('カメラを開けませんでした（'+e.name+'）。自動でつなぎ直します')})}
 /* 見張り：2秒ごとに映像が動いているかを確かめ、止まっていたら自動でつなぎ直す */

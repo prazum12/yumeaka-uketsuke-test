@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="ui.css?v=16">
+<script src="log.js?v=1"></script>
 </head>
 <body>
 <header class="band"><div class="band-in">
@@ -35,7 +36,7 @@
 </div></nav>
 <script>
 (function(){
-var API='https://yasuulab-n8n.xvps.jp/webhook/yumeaka-yoyaku-kanri-api-4c81d9';
+var API='https://yasuulab-n8n.xvps.jp/webhook/yumeaka-yoyaku-kanri-api-4c81d9',RESET='https://yasuulab-n8n.xvps.jp/webhook/yumeaka-yoyaku-reset-3b9f61';
 var STORE='yumeaka_uketsuke_v1';
 var $=function(i){return document.getElementById(i)};
 var me=null;try{me=JSON.parse(localStorage.getItem(STORE)||'null')}catch(e){}
@@ -47,6 +48,8 @@ fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(functi
 if(r.auth===false){$('who').textContent='';$('nav').className='pills hide';['days','people','devices'].forEach(function(i){$(i).textContent=''});msg(r.message+'\n受付の画面から、端末を登録し直してください。','ng');return}
 if(r.reload){if(r.self){msg('この端末を止めました。','ok');return}var m=r.message,c=r.cls;busy=false;load(function(){msg(m,c)});return}
 render(r);if(!keep)msg('')}).catch(function(){busy=false;document.body.classList.remove('busy');$('load').className='loading hide';msg('通信に失敗しました。もう一度試してください。','ng')})}
+function resetAll(){if(busy)return;busy=true;document.body.classList.add('busy');msg('リセットしています。20秒ほど待ってください。','ok');var b=new URLSearchParams();b.set('op','reset');b.set('sure','reset');b.set('device',me.device);b.set('key',me.key);
+fetch(RESET,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;document.body.classList.remove('busy');if(r.auth===false){msg(r.message,'ng');return}if(r.reload){load(function(){msg(r.message,r.cls)})}else msg(r.message,r.cls||'ng')}).catch(function(){busy=false;document.body.classList.remove('busy');msg('通信に失敗しました。リセットが終わったかどうかは、少し待ってから開き直して確かめてください。','ng')})}
 function load(after){busy=false;var b=new URLSearchParams();b.set('op','overview');b.set('device',me.device);b.set('key',me.key);busy=true;document.body.classList.add('busy');
 fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;document.body.classList.remove('busy');$('load').className='loading hide';if(r.auth===false){msg(r.message,'ng');return}render(r);if(after)after()}).catch(function(){busy=false;document.body.classList.remove('busy');$('load').className='loading hide';msg('通信に失敗しました。','ng')})}
 function people(title,list){var w=document.createDocumentFragment();w.appendChild(el('h3','',title+'（'+list.length+'人）'));
@@ -109,7 +112,13 @@ if(r.devices){var c=el('div','card');c.appendChild(el('h2','','受付に使え�
 r.devices.forEach(function(x){var tr=el('tr');tr.appendChild(el('td','',x.name+(x.mine?'（この端末）':'')));tr.appendChild(el('td','',x.id));tr.appendChild(el('td','',x.at?x.at.slice(0,16):''));
 var td=el('td');td.appendChild(el('span','tag '+(x.state==='有効'?'live':x.state==='停止'?'stop':'yet'),x.state));tr.appendChild(td);
 var a=el('td');if(x.state==='有効'){var k=el('button','act warn','止める');k.onclick=function(){if(k.dataset.sure){call({op:'stopDevice',target:x.id})}else{k.dataset.sure='1';k.textContent=x.mine?'この端末を止める（もう一度押す）':'本当に止める';setTimeout(function(){delete k.dataset.sure;k.textContent='止める'},4000)}};a.appendChild(k)}tr.appendChild(a);t.appendChild(tr)});
-c.appendChild(t);c.appendChild(el('small','','新しい端末の登録は、Discordの「受付の端末を登録する」ボタンから行います。止めた端末は、登録し直すまで使えません。'));V.appendChild(c)}
+c.appendChild(t);c.appendChild(el('small','','新しい端末の登録は、Discordの「受付の端末を登録する」ボタンから行います。止めた端末は、登録し直すまで使えません。'));V.appendChild(c)
+// 検証用の環境だけの道具：操作の記録を見る、環境をはじめの状態に戻す
+var tc=el('div','card');tc.appendChild(el('h2','','テストの道具'));
+var lg=el('a','','操作の記録（操作ログ）を開く');lg.href=r.sheetUrl+'#gid=927863012';lg.target='_blank';lg.rel='noopener';var lp=el('p');lp.appendChild(lg);tc.appendChild(lp);
+tc.appendChild(el('p','','環境をリセットすると、予約・入退室・顔写真・テストの参加者・この端末以外の受付の端末を消し、活動日を「今日・明日・1週間後」で作り直します。操作の記録は消えません。'));
+var rb=el('button','act warn','環境をリセットする');rb.onclick=function(){if(rb.dataset.sure){delete rb.dataset.sure;rb.textContent='環境をリセットする';resetAll()}else{rb.dataset.sure='1';rb.textContent='本当にリセットする（もう一度押す）';setTimeout(function(){delete rb.dataset.sure;rb.textContent='環境をリセットする'},4000)}};
+tc.appendChild(rb);tc.appendChild(el('small','','終わるまで20秒ほどかかります。Discordの予約の投稿も、新しいものに入れ替わります。'));V.appendChild(tc)}
 }
 Array.prototype.forEach.call(document.querySelectorAll('#nav button'),function(b){b.onclick=function(){Array.prototype.forEach.call(document.querySelectorAll('#nav button'),function(x){x.className=x.className.replace(/\s*on/,'')});b.className=(b.className+' on').trim();['days','people','devices'].forEach(function(i){$(i).className=i===b.dataset.tab?'':'hide'})}});
 if(!me||!me.device||!me.key){$('who').textContent='';$('load').className='loading hide';$('days').textContent='';msg('この端末は登録されていません。\n受付の画面から登録してください。','ng');var a=el('a','','受付の画面へ');a.href='./';$('days').appendChild(a)}else load();
