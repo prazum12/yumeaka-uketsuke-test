@@ -159,20 +159,36 @@ if(mode==='scan'&&r&&r.data){var now=Date.now();if(r.data!==last||now-lastAt>500
 setTimeout(function(){tick(my)},250)}
 function stopCam(){camOn=false;var v=$('v');if(v.srcObject){v.srcObject.getTracks().forEach(function(t){t.stop()});v.srcObject=null}}
 function camOff(text){$('startWrap').className='start';$('frame').className='frame hide';$('shutterWrap').className='shutter hide';$('hint').textContent=text}
-var camTry=0;
-function startCam(){
+var camTry=0,pendAt=0,wd={lastT:-1,stall:0,fails:0,next:0,blocked:false,everOn:false};
+function startCam(auto){
 if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camOff('この画面ではカメラが使えません。下の欄から管理番号を入れてください。');return}
-stopCam();var my=++camTry;
-$('startWrap').className='start hide';$('frame').className='frame hide';$('hint').textContent='カメラを準備しています。許可を聞かれたら「許可」を選んでください';
+stopCam();var my=++camTry;pendAt=Date.now();if(!auto){wd.blocked=false;wd.fails=0;wd.next=0}
+$('startWrap').className='start hide';$('frame').className='frame hide';$('hint').textContent=auto?'カメラをつなぎ直しています':'カメラを準備しています。許可を聞かれたら「許可」を選んでください';
 /* 許可の画面が出ない・返事が返らない機種があるので、数秒たっても始まらなければボタンを出す */
-setTimeout(function(){if(my===camTry&&!camOn)camOff('カメラが始まりません。下のボタンを押してください')},4500);
-navigator.mediaDevices.getUserMedia({video:{facingMode:facing}}).then(function(s){if(my!==camTry){s.getTracks().forEach(function(t){t.stop()});return}
-var v=$('v');v.srcObject=s;s.getTracks().forEach(function(t){t.onended=function(){if(my===camTry){camOn=false;camOff('カメラが止まりました。下のボタンを押してください')}}});
+setTimeout(function(){if(my===camTry&&!camOn)camOff('カメラが始まりません。自動でつなぎ直します。直らないときは下のボタンを押してください')},4500);
+navigator.mediaDevices.getUserMedia({video:{facingMode:facing}}).then(function(s){if(my===camTry)pendAt=0;if(my!==camTry){s.getTracks().forEach(function(t){t.stop()});return}
+var v=$('v');v.srcObject=s;s.getTracks().forEach(function(t){t.onended=function(){if(my===camTry){camOn=false;camOff('カメラが止まりました。自動でつなぎ直します')}}});
 $('startWrap').className='start hide';$('frame').className='frame';$('hint').textContent='ネームプレートのQRコードを枠に入れる';
 v.style.transform=facing==='user'?'scaleX(-1)':'';$('flip').textContent=facing==='user'?'外側のカメラ':'内側のカメラ';
 var p=v.play();if(p&&p.catch)p.catch(function(){});camOn=true;
 if(mode==='photo'&&target){$('shutterWrap').className='shutter';$('hint').textContent=photoHint()}else if(mode==='confirm'){$('hint').textContent='下のボタンで、保存するか撮り直すかを選ぶ'}else scanMode();
-tick(my)}).catch(function(e){if(my!==camTry)return;camOn=false;camOff('カメラを開けませんでした（'+e.name+'）。下のボタンでもう一度試せます')})}
+tick(my)}).catch(function(e){if(my!==camTry)return;pendAt=0;camOn=false;
+/* 許可されていない場合は、自動では直せないので止めて知らせる */
+if(e.name==='NotAllowedError'||e.name==='SecurityError'){wd.blocked=true;camOff('カメラの使用が許可されていません。ブラウザの設定で許可してから、下のボタンを押してください');return}
+camOff('カメラを開けませんでした（'+e.name+'）。自動でつなぎ直します')})}
+/* 見張り：2秒ごとに映像が動いているかを確かめ、止まっていたら自動でつなぎ直す */
+setInterval(function(){
+if(!me||!me.device||document.visibilityState!=='visible'||$('app').className==='hide')return;
+var v=$('v');var live=!!v.srcObject&&v.srcObject.getTracks().some(function(t){return t.readyState==='live'&&!t.muted});
+if(live&&v.paused){var p=v.play();if(p&&p.catch)p.catch(function(){})}
+var moving=live&&v.currentTime!==wd.lastT;wd.lastT=v.currentTime;
+if(moving){wd.everOn=true;wd.stall=0;wd.fails=0;wd.next=0;return}
+/* 許可の画面に答えている最中は、じゃまをしないよう長めに待つ */
+if(pendAt&&Date.now()-pendAt<(wd.everOn?7000:30000))return;
+wd.stall++;
+if(wd.blocked||wd.stall<2||Date.now()<wd.next)return;
+wd.fails++;wd.stall=0;wd.next=Date.now()+Math.min(20000,3000*wd.fails);
+startCam(true)},2000);
 /* ほかの画面へ移るときはカメラを手放し、戻ってきたら始め直す */
 window.addEventListener('pagehide',function(){camTry++;stopCam()});
 window.addEventListener('pageshow',function(e){if(e.persisted&&me&&me.device)startCam()});
@@ -196,7 +212,7 @@ me={device:r.device,key:key,name:r.name};
 if(!save(me)){note('この端末は情報を保存できない設定のため、登録できませんでした。\nプライベートブラウズを切るか、ふだん使っているブラウザで開き直してください。');me=null;return}
 history.replaceState(null,'',location.pathname+location.search);
 openApp()}).catch(function(){document.body.classList.remove('busy');$('regbtn').disabled=false;note('通信に失敗しました。もう一度試してください。')})};
-$('cam').onclick=startCam;
+$('cam').onclick=function(){startCam()};
 $('shoot').onclick=function(){if(!target)return;if(!camOn){show('ng','不可','カメラが使えません','カメラを始めてから、もう一度押してください。');return}
 mode='photo';$('shoot').className='btn quiet hide';$('confirm').className='two hide';$('shutterWrap').className='shutter';$('hint').textContent=photoHint()};
 $('flip').onclick=function(){facing=facing==='user'?'environment':'user';startCam()};
