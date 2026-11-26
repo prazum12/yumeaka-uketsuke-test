@@ -1,18 +1,21 @@
-/* 夢アカ 予約・受付の共通デザイン。ネームプレートの紺の帯と、区分の色をそのまま使う。 */
+/* 夢アカ 予約・受付の共通デザイン。資料集と同じ、白地に空色の差し色。区分の色（緑・橙・紫）はネームプレートと同じ。 */
 :root{
-  --ink:#16213e;      /* ネームプレートの紺 */
-  --ink-2:#4a5573;
-  --bg:#e9eef4;       /* 机の上の色 */
+  --ink:#1a2327;      /* 本文の字 */
+  --navy:#16213e;     /* ネームプレートの紺（札の絵だけに使う） */
+  --sky:#00b5e2; --member:#009688;
+  --ink-2:#55646b;
+  --bg:#f3f7f9;       /* 地の色 */
   --paper:#ffffff;
-  --line:#d5dde8;
-  --brand:#009688;    /* メンバーの緑 */
+  --line:#d9e1e5;
+  --brand:#006f92;    /* 押すところの色（空色を濃くしたもの） */
   --yet:#f5b301; --yet-bg:#fff6d9; --yet-ink:#7a5600;
   --here:#0e9f6e; --here-bg:#dff6ec; --here-ink:#06603f;
   --gone:#2f6fde; --gone-bg:#e1ecff; --gone-ink:#17438f;
   --late:#d93025; --late-bg:#fde8e6;
   --adult:#6a3fc4; --walk:#d9730d;
-  --round:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
-  --body:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  --round:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
+  --plate:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;
+  --body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -23,9 +26,9 @@ a{color:inherit}
 :focus-visible{outline:3px solid var(--gone);outline-offset:2px}
 
 /* 上の帯：ネームプレートと同じ紺 */
-.band{background:var(--ink);color:#fff;position:sticky;top:0;z-index:5}
+.band{background:#fff;color:var(--ink);border-top:5px solid var(--sky);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
 .band-in{max-width:720px;margin:0 auto;padding:10px 14px;display:flex;align-items:center;gap:12px}
-.mark{font-family:var(--round);font-weight:900;font-size:13px;letter-spacing:.02em;line-height:1.3}
+.mark{font-family:var(--round);font-weight:700;font-size:13px;line-height:1.35;color:var(--brand)}
 .mark small{display:block;font-size:10px;font-weight:500;letter-spacing:.04em;opacity:.7}
 .band-title{font-family:var(--round);font-weight:700;font-size:17px;margin-left:auto;text-align:right}
 .band-title small{display:block;font-size:11px;font-weight:500;opacity:.75}
@@ -38,7 +41,7 @@ a{color:inherit}
 .dock a.on{color:var(--ink);border-top-color:var(--brand)}
 
 /* 面 */
-.card{background:var(--paper);border-radius:18px;padding:16px;margin:12px 0;border:1px solid var(--line)}
+.card{background:var(--paper);border-radius:10px;padding:16px;margin:12px 0;border:1px solid var(--line)}
 .card h2{font-family:var(--round);font-size:22px;font-weight:900;margin:0}
 .meta{font-size:13.5px;color:var(--ink-2);margin-top:4px}
 .dayhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -99,7 +102,7 @@ td{padding:8px 4px;border-top:1px solid var(--line);vertical-align:middle}
 .tag.live{background:var(--here-bg);color:var(--here-ink)}.tag.stop{background:var(--late-bg);color:#8f1d15}.tag.yet{background:var(--bg);color:var(--ink-2)}
 .pills{display:flex;gap:8px;margin:12px 0 4px}
 .pills button{font-size:15px;font-weight:700;padding:9px 16px;border-radius:999px;border:2px solid var(--line);background:var(--paper);color:var(--ink-2)}
-.pills button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.pills button.on{background:var(--brand);border-color:var(--brand);color:#fff}
 
 /* はんこ：読み取りの結果を押す */
 .stamp{width:104px;height:104px;border-radius:50%;border:6px solid currentColor;display:flex;align-items:center;justify-content:center;font-family:var(--round);font-weight:900;font-size:30px;letter-spacing:.06em;transform:rotate(-9deg);flex:none;position:relative}
@@ -110,7 +113,7 @@ td{padding:8px 4px;border-top:1px solid var(--line);vertical-align:middle}
 
 /* 読み込み中：帯の下を走る線、回るはんこ、形だけ先に出る札 */
 .band::after{content:"";display:block;height:4px;background:transparent}
-body.busy .band::after{background:linear-gradient(90deg,transparent 0,var(--brand) 30%,#7fe0d6 50%,var(--brand) 70%,transparent 100%);background-size:50% 100%;background-repeat:no-repeat;animation:run 1s linear infinite}
+body.busy .band::after{background:linear-gradient(90deg,transparent 0,var(--brand) 30%,#00b5e2 50%,var(--brand) 70%,transparent 100%);background-size:50% 100%;background-repeat:no-repeat;animation:run 1s linear infinite}
 @keyframes run{from{background-position:-50% 0}to{background-position:150% 0}}
 .loading{display:flex;align-items:center;gap:14px;padding:6px 2px 2px;color:var(--ink-2);font-family:var(--round);font-weight:700;font-size:16px}
 .ring{width:46px;height:46px;border-radius:50%;border:5px dotted var(--brand);flex:none;animation:spin 2.4s linear infinite}
@@ -118,7 +121,7 @@ body.busy .band::after{background:linear-gradient(90deg,transparent 0,var(--bran
 .sk{border-radius:18px;background:var(--paper);border:1px solid var(--line);margin:12px 0;padding:16px;overflow:hidden}
 .sk i{display:block;height:14px;border-radius:7px;margin:10px 0;background:linear-gradient(90deg,var(--bg) 0,#f6f9fc 50%,var(--bg) 100%);background-size:200% 100%;animation:shine 1.3s linear infinite}
 .sk i.h{height:26px;width:45%}.sk i.w60{width:60%}.sk i.w80{width:80%}.sk i.block{height:64px;border-radius:14px}
-.sk.tk{display:flex;padding:0}.sk.tk b{flex:none;width:92px;background:var(--ink);opacity:.85}.sk.tk div{flex:1;padding:14px}
+.sk.tk{display:flex;padding:0}.sk.tk b{flex:none;width:92px;background:var(--line)}.sk.tk div{flex:1;padding:14px}
 @keyframes shine{from{background-position:200% 0}to{background-position:-200% 0}}
 .stamp.wait{border-style:dotted;animation:spin 2.4s linear infinite;color:var(--brand);opacity:1!important;font-size:0}
 .btn:disabled{opacity:.55}
@@ -151,3 +154,9 @@ body.busy .band::after{background:linear-gradient(90deg,transparent 0,var(--bran
 .tiphint{font-size:12.5px;color:var(--ink-2);margin:0 2px 8px;font-weight:700}
 .group{font-family:var(--round);font-weight:900;font-size:15px;margin:16px 2px 8px;color:var(--ink-2)}
 .sheet-in .ava{width:52px;height:52px}
+
+/* 白地に空色の差し色 */
+body{font-weight:500}
+.ticket .stub{background:#55646b}
+.band-title small{opacity:1;color:var(--ink-2)}
+::selection{background:#fbf8c4}
