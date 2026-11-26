@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=7">
+<link rel="stylesheet" href="ui.css?v=8">
 <style>
 .finder{position:relative;border-radius:22px;overflow:hidden;background:#0d1326;aspect-ratio:4/3;margin:12px 0 0}
 .finder video{width:100%;height:100%;object-fit:cover;display:block}
@@ -59,7 +59,7 @@
     <video id="v" playsinline muted></video>
     <div class="frame" id="frame"><i></i><i></i><i></i><i></i></div>
     <div class="hint" id="hint">ネームプレートのQRコードを枠に入れる</div>
-    <div class="shutter hide" id="shutterWrap"><button class="back" id="pcancel">やめる</button><button class="snap" id="snap" aria-label="顔写真を撮る"></button><span style="width:62px"></span></div>
+    <div class="shutter hide" id="shutterWrap"><button class="back" id="pcancel">やめる</button><button class="snap" id="snap" aria-label="顔写真を撮る"></button><button class="back" id="flip">内側のカメラ</button></div>
     <div class="start hide" id="startWrap"><button id="cam" class="btn">カメラを始める</button></div>
   </div>
   <canvas id="c" class="hide"></canvas>
@@ -121,10 +121,13 @@ var today=new Date(Date.now()+9*3600*1000).toISOString().slice(0,10);
 var last='',lastAt=0,busy=false,camOn=false,L={arrived:[],notYet:[],left:[]},tab='arrived';
 
 /* 読み取りの結果を、はんこと大きな名前で見せる */
-var mode='scan',target=null,shot='';
+var mode='scan',target=null,shot='',facing='environment';
+function photoHint(){return (target?target.who+' さんの':'')+'顔を枠に入れて、赤い丸を押す'}
 function face(src){var f=$('face');if(src){f.src=src;f.className='face';$('result').classList.add('has-face')}else{f.removeAttribute('src');f.className='face hide';$('result').classList.remove('has-face')}}
 function setTarget(r){if(r&&r.no&&!r.guest){target={no:r.no,who:r.who||''};$('shoot').className='btn quiet';$('shoot').textContent=r.hasPhoto?'顔写真を撮り直す':'顔写真を撮る（まだ登録されていません）'}else{target=null;$('shoot').className='btn quiet hide'}}
-function scanMode(){mode='scan';$('shutterWrap').className='shutter hide';$('confirm').className='two hide';$('hint').textContent='ネームプレートのQRコードを枠に入れる'}
+function scanMode(){mode='scan';$('shutterWrap').className='shutter hide';$('confirm').className='two hide';$('hint').textContent='ネームプレートのQRコードを枠に入れる';
+/* 内側のカメラで撮ったあとは、QRコードを読むために外側のカメラへ戻す */
+if(facing==='user'){facing='environment';startCam()}}
 function show(kind,stamp,who,what,pop){var r=$('result');r.className='result r-'+kind+($('face').className==='face'?' has-face':'');var s=$('stamp');s.textContent=stamp;
 s.className='stamp';if(pop){void s.offsetWidth;s.className='stamp pop'}$('who2').textContent=who;$('what').textContent=what||''}
 function showMsg(message,cls,scanned){var i=message.indexOf('\n');var who=i>=0?message.slice(0,i):message;var what=i>=0?message.slice(i+1):'';
@@ -149,11 +152,11 @@ lists(r);$('dayLabel').textContent=dayText($('day').value)||'検証用';
 if(!code){idle();return}
 face(r.photo||'');setTarget(r);showMsg(r.message,r.cls||'',true)}).catch(function(){busy=false;document.body.classList.remove('busy');show('ng','不可','通信に失敗しました','もう一度かざしてください。',true)})}
 
-function tick(){if(!camOn)return;var v=$('v');
+function tick(my){if(!camOn||my!==camTry)return;var v=$('v');
 if(v.readyState===v.HAVE_ENOUGH_DATA){var c=$('c');c.width=v.videoWidth;c.height=v.videoHeight;var x=c.getContext('2d');x.drawImage(v,0,0);
 var im=x.getImageData(0,0,c.width,c.height);var r=window.jsQR?jsQR(im.data,c.width,c.height):null;
 if(mode==='scan'&&r&&r.data){var now=Date.now();if(r.data!==last||now-lastAt>5000){last=r.data;lastAt=now;send(r.data)}}}
-setTimeout(tick,250)}
+setTimeout(function(){tick(my)},250)}
 function stopCam(){camOn=false;var v=$('v');if(v.srcObject){v.srcObject.getTracks().forEach(function(t){t.stop()});v.srcObject=null}}
 function camOff(text){$('startWrap').className='start';$('frame').className='frame hide';$('shutterWrap').className='shutter hide';$('hint').textContent=text}
 var camTry=0;
@@ -163,10 +166,13 @@ stopCam();var my=++camTry;
 $('startWrap').className='start hide';$('frame').className='frame hide';$('hint').textContent='カメラを準備しています。許可を聞かれたら「許可」を選んでください';
 /* 許可の画面が出ない・返事が返らない機種があるので、数秒たっても始まらなければボタンを出す */
 setTimeout(function(){if(my===camTry&&!camOn)camOff('カメラが始まりません。下のボタンを押してください')},4500);
-navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(s){if(my!==camTry){s.getTracks().forEach(function(t){t.stop()});return}
+navigator.mediaDevices.getUserMedia({video:{facingMode:facing}}).then(function(s){if(my!==camTry){s.getTracks().forEach(function(t){t.stop()});return}
 var v=$('v');v.srcObject=s;s.getTracks().forEach(function(t){t.onended=function(){if(my===camTry){camOn=false;camOff('カメラが止まりました。下のボタンを押してください')}}});
 $('startWrap').className='start hide';$('frame').className='frame';$('hint').textContent='ネームプレートのQRコードを枠に入れる';
-var p=v.play();if(p&&p.catch)p.catch(function(){});camOn=true;scanMode();tick()}).catch(function(e){if(my!==camTry)return;camOn=false;camOff('カメラを開けませんでした（'+e.name+'）。下のボタンでもう一度試せます')})}
+v.style.transform=facing==='user'?'scaleX(-1)':'';$('flip').textContent=facing==='user'?'外側のカメラ':'内側のカメラ';
+var p=v.play();if(p&&p.catch)p.catch(function(){});camOn=true;
+if(mode==='photo'&&target){$('shutterWrap').className='shutter';$('hint').textContent=photoHint()}else if(mode==='confirm'){$('hint').textContent='下のボタンで、保存するか撮り直すかを選ぶ'}else scanMode();
+tick(my)}).catch(function(e){if(my!==camTry)return;camOn=false;camOff('カメラを開けませんでした（'+e.name+'）。下のボタンでもう一度試せます')})}
 /* ほかの画面へ移るときはカメラを手放し、戻ってきたら始め直す */
 window.addEventListener('pagehide',function(){camTry++;stopCam()});
 window.addEventListener('pageshow',function(e){if(e.persisted&&me&&me.device)startCam()});
@@ -192,13 +198,14 @@ history.replaceState(null,'',location.pathname+location.search);
 openApp()}).catch(function(){document.body.classList.remove('busy');$('regbtn').disabled=false;note('通信に失敗しました。もう一度試してください。')})};
 $('cam').onclick=startCam;
 $('shoot').onclick=function(){if(!target)return;if(!camOn){show('ng','不可','カメラが使えません','カメラを始めてから、もう一度押してください。');return}
-mode='photo';$('shoot').className='btn quiet hide';$('confirm').className='two hide';$('shutterWrap').className='shutter';$('hint').textContent=target.who+' さんの顔を枠に入れて、赤い丸を押す'};
+mode='photo';$('shoot').className='btn quiet hide';$('confirm').className='two hide';$('shutterWrap').className='shutter';$('hint').textContent=photoHint()};
+$('flip').onclick=function(){facing=facing==='user'?'environment':'user';startCam()};
 $('pcancel').onclick=function(){scanMode();setTarget({no:target.no,who:target.who,hasPhoto:$('face').className==='face'})};
 $('snap').onclick=function(){var v=$('v');if(!v.videoWidth)return;var s=Math.min(v.videoWidth,v.videoHeight);var c=document.createElement('canvas');c.width=280;c.height=280;
 c.getContext('2d').drawImage(v,(v.videoWidth-s)/2,(v.videoHeight-s)/2,s,s,0,0,280,280);
 shot=c.toDataURL('image/jpeg',0.72);if(shot.length>46000)shot=c.toDataURL('image/jpeg',0.5);
 mode='confirm';$('shutterWrap').className='shutter hide';$('confirm').className='two';face(shot);show('warn','確認',target.who+' さん','この写真で保存しますか？');$('hint').textContent='下のボタンで、保存するか撮り直すかを選ぶ'};
-$('pretry').onclick=function(){mode='photo';$('confirm').className='two hide';$('shutterWrap').className='shutter';$('hint').textContent=target.who+' さんの顔を枠に入れて、赤い丸を押す'};
+$('pretry').onclick=function(){mode='photo';$('confirm').className='two hide';$('shutterWrap').className='shutter';$('hint').textContent=photoHint()};
 $('psave').onclick=function(){if(busy)return;busy=true;document.body.classList.add('busy');$('psave').disabled=true;
 post({op:'photo',device:me.device,key:me.key,no:target.no,image:shot}).then(function(r){busy=false;document.body.classList.remove('busy');$('psave').disabled=false;
 if(r.auth===false){scanMode();show('ng','不可','この端末では保存できません',r.message);return}
