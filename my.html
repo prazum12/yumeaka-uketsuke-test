@@ -48,7 +48,14 @@ body{padding-bottom:24px}
 </div></header>
 <main>
 <nav class="mytabs" aria-label="マイページの中の移動"><a id="tabY" class="">予約・講義</a><a id="tabM" class="on">ネームプレート・登録</a></nav>
-<script>(function(){var h=location.hash||'';document.getElementById('tabY').href='yoyaku.html'+h;document.getElementById('tabM').href='my.html'+h})();</script>
+<script>/* 専用リンクの鍵：アドレスから読んだら、このタブの中だけの保管場所に移し、アドレスと履歴からは消す */
+window.YumeKey=(function(){var k=new URLSearchParams((location.hash||'').replace(/^#/,'')).get('k')||'',kept=false;
+if(k){try{sessionStorage.setItem('yumeaka_mykey',k);kept=sessionStorage.getItem('yumeaka_mykey')===k}catch(e){kept=false}
+if(kept){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}}
+else{try{k=sessionStorage.getItem('yumeaka_mykey')||''}catch(e){k=''}kept=!!k}
+var h=(k&&!kept)?'#k='+encodeURIComponent(k):'';
+document.getElementById('tabY').href='yoyaku.html'+h;document.getElementById('tabM').href='my.html'+h;
+return {key:k,hash:h}})();</script>
 <div class="loading" id="load"><span class="ring"></span>登録の内容を確かめています</div>
 <div id="msg" class="note hide"></div>
 
@@ -98,7 +105,7 @@ body{padding-bottom:24px}
 (function(){
 var API='https://yasuulab-n8n.xvps.jp/webhook/yumeaka-yoyaku-page-api-e7b204';
 var $=function(i){return document.getElementById(i)};
-var key=new URLSearchParams(location.hash.replace(/^#/,'')).get('k')||'';
+var key=(window.YumeKey&&window.YumeKey.key)||'';
 var busy=false,P=null,facing='user',stream=null,shot='',camTry=0;
 function msg(t,c){var m=$('msg');m.textContent=t||'';m.className='note '+(c||'ng')+(t?'':' hide')}
 function call(o,done){if(busy)return;busy=true;document.body.classList.add('busy');var b=new URLSearchParams();o.key=key;for(var k in o)b.set(k,o[k]);
@@ -118,7 +125,7 @@ $('s1').textContent=P.confirmedAt?'確認済み':'まだ';$('s1').className=P.co
 $('ok').textContent=P.confirmedAt?'呼び名を直して、もう一度確認する':'この内容で確認する';
 if(P.canSelfPhoto){$('photoCard').className='card';$('s2').textContent=P.hasPhoto?'登録済み':'まだ';$('s2').className=P.hasPhoto?'done':'todo';$('shoot').textContent=P.hasPhoto?'顔写真を撮り直す':'顔写真を撮る'}
 else{$('photoCard').className='card';$('s2').textContent='';$('ptxt').textContent='顔写真は、活動日に受付で撮ります。ここでの登録は不要です。';$('shoot').className='btn hide'}
-$('toYoyaku').href='yoyaku.html#k='+encodeURIComponent(key);plate()}
+$('toYoyaku').href='yoyaku.html'+((window.YumeKey&&window.YumeKey.hash)||'');plate()}
 
 // 自分のネームプレートを、紙と同じ並びで描く（91mm×55mm、300dpi相当）
 function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
