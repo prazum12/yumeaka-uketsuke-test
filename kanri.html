@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=13">
+<link rel="stylesheet" href="ui.css?v=14">
 </head>
 <body>
 <header class="band"><div class="band-in">
@@ -84,7 +84,7 @@ c.appendChild(bar);
 var sec=function(key,icon,title,list,empty){var w=el('div','sec s-'+key);w.appendChild(el('div','sechead',icon+' '+title+'　'+list.length+'人'));
 if(!list.length){w.appendChild(el('div','empty',empty));c.appendChild(w);return}
 var g=el('div','chips');list.forEach(function(p){var ch=el('div','chip wa'+(p.late?' late':''));var av=el('span','ava',p.name.slice(0,1));av.dataset.no=p.no;ch.appendChild(av);var bd=el('div');ch.appendChild(bd);
-var top=el('div','ctop');top.appendChild(el('span','cname',p.name));
+var top=el('div','ctop');top.appendChild(el('span','cname',p.name));if(p.real)top.appendChild(el('span','creal',p.real));
 if(p.adult)top.appendChild(el('span','badge b-adult','見守り'));
 if(p.guest)top.appendChild(el('span','badge b-walk','ゲスト'));else if(p.walkin)top.appendChild(el('span','badge b-walk','予約なし'));
 if(p.late)top.appendChild(el('span','badge b-late','遅れ'));if(!p.hasPhoto&&!p.guest)top.appendChild(el('span','badge b-nophoto','写真まだ'));bd.appendChild(top);
@@ -99,7 +99,7 @@ var Q=$('people');Q.textContent='';
 if(r.people){var pc=el('div','card');pc.appendChild(el('h2','','登録の状況'));
 var act=r.people.filter(function(p){return !p.state||p.state==='在籍'});var nC=act.filter(function(p){return p.confirmed}).length,nP=act.filter(function(p){return p.hasPhoto}).length,nL=r.people.length-act.length;
 pc.appendChild(el('div','meta','在籍 '+act.length+'人　本人の確認 '+nC+'人　顔写真 '+nP+'人'+(nL?'　在籍でないのに写真が残っている人 '+nL+'人':'')));
-var pt=el('table');r.people.forEach(function(p){var tr=el('tr');var a=el('td');a.appendChild(el('div','cname',p.name));a.appendChild(el('div','csub','No. '+p.no+'　'+p.group+((p.state&&p.state!=='在籍')?'　名簿の状態：'+p.state:'')));tr.appendChild(a);
+var pt=el('table');r.people.forEach(function(p){var tr=el('tr');var a=el('td');a.appendChild(el('div','cname',p.name));a.appendChild(el('div','csub',(p.real?p.real:'本名まだ')+'　No. '+p.no+'　'+p.group+((p.state&&p.state!=='在籍')?'　名簿の状態：'+p.state:'')));tr.appendChild(a);
 [[p.confirmed,'確認済み','確認まだ'],[p.hasPhoto,'写真あり','写真まだ'],[p.linked,'Discord結びつき済み',p.discordOk?'Discordまだ':'Discordなし']].forEach(function(x,i){var td=el('td');td.appendChild(el('span','tag '+(x[0]?'live':'yet'),x[0]?x[1]:x[2]));
 if(i===1&&p.hasPhoto&&r.me.isAdmin){var k=el('button','act quiet','写真を消す');k.style.display='block';k.style.marginTop='6px';k.onclick=function(){if(k.dataset.sure){call({op:'removePhoto',target:p.no})}else{k.dataset.sure='1';k.className='act warn';k.textContent='本当に消す（戻せません）';setTimeout(function(){delete k.dataset.sure;k.className='act quiet';k.textContent='写真を消す'},6000)}};td.appendChild(k)}
 tr.appendChild(td)});pt.appendChild(tr)});

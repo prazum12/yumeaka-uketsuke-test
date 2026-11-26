@@ -10,11 +10,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=13">
+<link rel="stylesheet" href="ui.css?v=14">
 <style>
 body{padding-bottom:24px}
 /* ネームプレートと同じ並び：紺の帯、色の線、大きな呼び名、番号 */
 .plate{background:var(--paper);border-radius:18px;overflow:hidden;border:1px solid var(--line);margin:14px 0}
+.realbox{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0 14px;background:#f7f9fb}
+.realbox span{display:block;font-size:12.5px;color:var(--ink-2)}
+.realbox b{display:block;font-family:var(--round);font-size:20px;font-weight:900}
+.realbox small{display:block;font-size:12.5px;color:var(--ink-2);margin-top:2px}
 .plate .top{background:var(--ink);color:#fff;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:var(--round);font-weight:900;letter-spacing:.02em;font-size:13px}
 .plate .role{font-size:12px;letter-spacing:0;padding:2px 10px;border-radius:999px;background:var(--brand)}
 .plate .role.r-m{background:#e8730c}.plate .role.r-s{background:#6a3fc4}
@@ -51,7 +55,9 @@ body{padding-bottom:24px}
 
   <div class="card">
     <div class="step"><h2>登録の内容を確かめる</h2><span id="s1"></span></div>
-    <p class="txt">ネームプレートに載る呼び名です。変えたい場合は、ここで直してください。</p>
+    <p class="txt">本名は、出欠などの正式な記録に使います。運営が登録した名前です。ネームプレートには載りません。</p>
+    <p class="txt">呼び名は、ネームプレートに載る名前です。変えたい場合は、ここで直してください。</p>
+    <div class="realbox"><span>本名</span><b id="real"></b><small id="realnote"></small></div>
     <label for="name">呼び名（12文字まで）</label>
     <input id="name" maxlength="12" autocomplete="off">
     <button id="ok" class="btn">この内容で確認する</button>
@@ -100,6 +106,7 @@ P=r.profile;$('body').className='';msg(r.message||'',r.cls||'ok');
 var k=P.group==='メンター'?'r-m':P.group==='運営'?'r-s':'';
 $('role').textContent=P.group;$('role').className='role '+k;$('plateIn').className='in '+k;
 $('pname').textContent=P.name;$('pno').textContent='No. '+P.no;
+$('real').textContent=P.real?(P.real+(P.kana?'（'+P.kana+'）':'')):'まだ登録されていません';$('realnote').textContent=P.real?'ちがうときは、運営に伝えてください。':'運営に伝えてください。';
 if(document.activeElement!==$('name'))$('name').value=P.name;
 if(r.photo)setFace(r.photo);else if(!P.hasPhoto)setFace('');
 $('s1').textContent=P.confirmedAt?'確認済み':'まだ';$('s1').className=P.confirmedAt?'done':'todo';
