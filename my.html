@@ -10,12 +10,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="ui.css?v=11">
+<link rel="stylesheet" href="ui.css?v=13">
 <style>
 body{padding-bottom:24px}
 /* ネームプレートと同じ並び：紺の帯、色の線、大きな呼び名、番号 */
 .plate{background:var(--paper);border-radius:18px;overflow:hidden;border:1px solid var(--line);margin:14px 0}
-.plate .top{background:var(--ink);color:#fff;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;font-family:var(--round);font-weight:900;letter-spacing:.1em;font-size:13px}
+.plate .top{background:var(--ink);color:#fff;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:var(--round);font-weight:900;letter-spacing:.02em;font-size:13px}
 .plate .role{font-size:12px;letter-spacing:0;padding:2px 10px;border-radius:999px;background:var(--brand)}
 .plate .role.r-m{background:#e8730c}.plate .role.r-s{background:#6a3fc4}
 .plate .in{display:flex;gap:14px;align-items:center;padding:16px;border-left:8px solid var(--brand)}
@@ -36,7 +36,7 @@ body{padding-bottom:24px}
 </head>
 <body>
 <header class="band"><div class="band-in">
-  <div class="mark">YUME ACADEMY<small>横須賀プログラミング"夢"アカデミー</small></div>
+  <div class="mark">横須賀プログラミング"夢"アカデミー</div>
   <div class="band-title">自分の登録<small>検証用</small></div>
 </div></header>
 <main>
@@ -45,7 +45,7 @@ body{padding-bottom:24px}
 
 <div id="body" class="hide">
   <div class="plate">
-    <div class="top"><span>YUME ACADEMY</span><span class="role" id="role"></span></div>
+    <div class="top"><span>横須賀プログラミング"夢"アカデミー</span><span class="role" id="role"></span></div>
     <div class="in" id="plateIn"><div class="pface" id="pface"></div><div><div class="nm" id="pname"></div><div class="no" id="pno"></div></div></div>
   </div>
 
@@ -114,8 +114,7 @@ function drawPlate(){if(!P||!window.YumeQR)return;var W=1075,H=650,F='"Zen Maru 
 var acc=P.group==='メンター'?'#ef6c00':P.group==='運営'?'#5e35b1':'#009688';
 var c=document.createElement('canvas');c.width=W;c.height=H;var g=c.getContext('2d');
 g.fillStyle='#fcfaf5';g.fillRect(0,0,W,H);g.fillStyle='#16213e';g.fillRect(0,0,W,132);
-g.textBaseline='middle';g.fillStyle='#fff';g.font='900 46px '+F;g.fillText('YUME ACADEMY',48,52);
-g.fillStyle='#bec8e1';g.font='500 24px '+F;g.fillText('横須賀プログラミング“夢”アカデミー',48,100);
+g.textBaseline='middle';g.fillStyle='#fff';g.font='900 38px '+F;g.fillText('横須賀プログラミング"夢"アカデミー',48,68);
 g.font='900 30px '+F;var rw=g.measureText(P.group).width;g.fillStyle=acc;rr(g,W-rw-96,40,rw+52,56,28);g.fill();g.fillStyle='#fff';g.fillText(P.group,W-rw-70,69);
 g.fillStyle=acc;g.fillRect(0,132,18,H-132);
 var qs=330,qx=W-qs-48,qy=214;g.fillStyle='#fff';rr(g,qx-14,qy-14,qs+28,qs+28,18);g.fill();g.strokeStyle='#e1ded6';g.lineWidth=3;g.stroke();
@@ -124,7 +123,7 @@ var maxW=qx-14-62-44,size=168;g.fillStyle='#18181c';for(;size>60;size-=4){g.font
 g.font='900 62px '+F;var lab='No. '+P.no,lw=g.measureText(lab).width;g.strokeStyle=acc;g.lineWidth=6;rr(g,62,448,lw+56,100,22);g.stroke();g.fillStyle=acc;g.fillText(lab,90,500);
 var u=c.toDataURL('image/png');$('plateImg').src=u;$('plateSave').href=u;$('plateSave').setAttribute('download','yumeaka_nameplate_'+P.no+'.png')}
 function plate(){if(!P)return;var go=function(){try{drawPlate()}catch(e){}};
-if(document.fonts&&document.fonts.load){var t=setTimeout(go,2500);Promise.all([document.fonts.load('900 60px "Zen Maru Gothic"',P.name+P.group+'YUME ACADEMY No.0123456789-'),document.fonts.load('500 24px "Zen Maru Gothic"','横須賀プログラミング“夢”アカデミー')]).then(function(){clearTimeout(t);go()},function(){clearTimeout(t);go()})}else go()}
+if(document.fonts&&document.fonts.load){var t=setTimeout(go,2500);Promise.all([document.fonts.load('900 60px "Zen Maru Gothic"',P.name+P.group+'横須賀プログラミング"夢"アカデミー No.0123456789-'),document.fonts.load('500 24px "Zen Maru Gothic"','横須賀プログラミング“夢”アカデミー')]).then(function(){clearTimeout(t);go()},function(){clearTimeout(t);go()})}else go()}
 
 function stopCam(){camTry++;if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}$('v').srcObject=null}
 function startCam(){stopCam();var my=camTry;$('cam').className='cam';$('shotImg').className='hide';$('v').className='';$('shutterWrap').className='shutter';

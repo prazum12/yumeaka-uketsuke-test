@@ -25,7 +25,7 @@ a{color:inherit}
 /* 上の帯：ネームプレートと同じ紺 */
 .band{background:var(--ink);color:#fff;position:sticky;top:0;z-index:5}
 .band-in{max-width:720px;margin:0 auto;padding:10px 14px;display:flex;align-items:center;gap:12px}
-.mark{font-family:var(--round);font-weight:900;font-size:15px;letter-spacing:.12em;line-height:1.1}
+.mark{font-family:var(--round);font-weight:900;font-size:13px;letter-spacing:.02em;line-height:1.3}
 .mark small{display:block;font-size:10px;font-weight:500;letter-spacing:.04em;opacity:.7}
 .band-title{font-family:var(--round);font-weight:700;font-size:17px;margin-left:auto;text-align:right}
 .band-title small{display:block;font-size:11px;font-weight:500;opacity:.75}
