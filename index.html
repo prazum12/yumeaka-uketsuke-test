@@ -2,59 +2,96 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#16213e">
 <title>夢アカ 受付（検証用）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ui.css?v=4">
 <style>
-body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;margin:0;background:#16213e;color:#fff}
-main{max-width:560px;margin:0 auto;padding:14px}
-h1{font-size:18px;margin:6px 0 12px}
-label{font-size:13px;opacity:.85}
-input,button{font-size:17px;padding:10px;border-radius:10px;border:0;width:100%;box-sizing:border-box;margin:4px 0 10px}
-button{background:#009688;color:#fff;font-weight:700}
-button.sub{background:#3a4670;font-weight:400;font-size:14px}
-#v{width:100%;border-radius:14px;background:#000;display:none}
-#msg{margin:12px 0;padding:16px;border-radius:14px;font-size:20px;font-weight:700;background:#2a3558;min-height:56px;white-space:pre-line}
-.ok{background:#1b8a5a!important}.out{background:#1565c0!important}.warn{background:#b26a00!important}.ng{background:#b3261e!important}
-.box{background:#222c4d;border-radius:14px;padding:12px;margin:10px 0;font-size:15px;line-height:1.7}
-.row{display:flex;gap:8px}.row input{flex:1}.row button{width:auto;white-space:nowrap}
-small{opacity:.7;line-height:1.6;display:block}
-.hide{display:none}
-#code{letter-spacing:.15em;text-transform:uppercase;text-align:center;font-size:22px}
+.finder{position:relative;border-radius:22px;overflow:hidden;background:#0d1326;aspect-ratio:4/3;margin:12px 0 0}
+.finder video{width:100%;height:100%;object-fit:cover;display:block}
+.finder .frame{position:absolute;inset:14% 22%;pointer-events:none}
+.finder .frame i{position:absolute;width:34px;height:34px;border:5px solid #fff;border-radius:6px}
+.finder .frame i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0}
+.finder .frame i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0}
+.finder .frame i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0}
+.finder .frame i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0}
+.finder .hint{position:absolute;left:0;right:0;bottom:10px;text-align:center;color:#fff;font-family:var(--round);font-weight:700;font-size:14px;text-shadow:0 1px 4px #000}
+.finder .start{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px}
+.result{display:flex;align-items:center;gap:16px;border-radius:18px;padding:16px;margin:12px 0;background:var(--paper);border:1px solid var(--line);min-height:138px}
+.result .who{font-family:var(--round);font-weight:900;font-size:30px;line-height:1.2}
+.result .what{font-size:16px;font-weight:700;margin-top:4px;white-space:pre-line}
+.result.r-ok{background:var(--here-bg);color:var(--here-ink);border-color:transparent}
+.result.r-out{background:var(--gone-bg);color:var(--gone-ink);border-color:transparent}
+.result.r-warn{background:var(--yet-bg);color:var(--yet-ink);border-color:transparent}
+.result.r-ng{background:var(--late-bg);color:#8f1d15;border-color:transparent}
+.result.r-idle{color:var(--ink-2)}
+.result.r-idle .stamp{opacity:.25}
+.list{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px;margin:0 0 12px}
+.list .chips{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.manual{display:flex;gap:8px}.manual input{flex:1}.manual button{width:auto;margin:0;white-space:nowrap;padding:0 18px;font-size:16px}
+#code{letter-spacing:.18em;text-transform:uppercase;text-align:center;font-family:var(--round);font-weight:900;font-size:26px}
 </style>
 </head>
 <body>
+<header class="band"><div class="band-in">
+  <div class="mark">YUME ACADEMY<small>横須賀プログラミング"夢"アカデミー</small></div>
+  <div class="band-title">受付<small id="dayLabel">検証用</small></div>
+</div></header>
 <main>
-<h1>夢アカ 受付（検証用）</h1>
 
-<div id="reg" class="hide">
-  <div class="box">
-    この端末は、まだ受付用に登録されていません。<br>
-    Discordで「受付の端末を登録する」を押すと、登録コードが届きます。
+<section id="reg" class="hide">
+  <div class="card">
+    <h2>この端末を受付用に登録します</h2>
+    <p class="txt">Discordの運営用チャンネルで「受付の端末を登録する」を押すと、登録コードが届きます。</p>
+    <label for="code">登録コード</label>
+    <input id="code" autocomplete="off" autocapitalize="characters" placeholder="XXXX-XXXX">
+    <button id="regbtn" class="btn">登録する</button>
+    <div id="msg0" class="note hide"></div>
   </div>
-  <label>登録コード</label>
-  <input id="code" autocomplete="off" autocapitalize="characters" placeholder="XXXX-XXXX">
-  <button id="regbtn">この端末を登録する</button>
-</div>
+</section>
 
-<div id="app" class="hide">
-  <video id="v" playsinline muted></video>
+<section id="app" class="hide">
+  <div class="finder">
+    <video id="v" playsinline muted></video>
+    <div class="frame" id="frame"><i></i><i></i><i></i><i></i></div>
+    <div class="hint" id="hint">ネームプレートのQRコードを枠に入れる</div>
+    <div class="start hide" id="startWrap"><button id="cam" class="btn">カメラを始める</button></div>
+  </div>
   <canvas id="c" class="hide"></canvas>
-  <button id="cam" class="hide">カメラを始める</button>
-  <div id="msg">準備中</div>
-  <div class="row"><input id="manual" placeholder="管理番号を手で入力（例 5-01）"><button id="mbtn">記録</button></div>
-  <div class="box"><b>到着済み</b> <span id="n1"></span><div id="l1"></div></div>
-  <div class="box"><b>予約したがまだ来ていない</b> <span id="n2"></span><div id="l2"></div></div>
-  <div class="box"><b>帰った人</b> <span id="n3"></span><div id="l3"></div></div>
-  <label>活動日</label>
-  <input id="day" type="date">
-  <small id="who"></small>
-  <a id="kanri" href="kanri.html" style="display:block;text-align:center;margin:10px 0;padding:12px;border-radius:10px;background:#3a4670;color:#fff;text-decoration:none;font-size:15px">運営画面を開く（予約・出欠・端末の一覧）</a>
-  <button id="forget" class="sub">この端末の登録を消す</button>
-</div>
 
-<div id="msg0" class="box hide"></div>
+  <div id="result" class="result r-idle" aria-live="assertive">
+    <div class="stamp" id="stamp">受付</div>
+    <div><div class="who" id="who2">読み取りを待っています</div><div class="what" id="what"></div></div>
+  </div>
+
+  <div class="tiles">
+    <button class="tile t-yet" data-k="notYet"><div class="num" id="n2">0</div><div class="lab">まだ来ていない</div></button>
+    <button class="tile t-here on" data-k="arrived"><div class="num" id="n1">0</div><div class="lab">来ている</div></button>
+    <button class="tile t-gone" data-k="left"><div class="num" id="n3">0</div><div class="lab">帰った</div></button>
+  </div>
+  <div class="list"><div class="chips" id="names"></div></div>
+
+  <details>
+    <summary>ネームプレートを忘れた人・日付の変更</summary>
+    <label for="manual">管理番号を手で入れる</label>
+    <div class="manual"><input id="manual" placeholder="例 5-01" inputmode="text"><button id="mbtn" class="btn">記録</button></div>
+    <label for="day">活動日</label>
+    <input id="day" type="date">
+    <small class="foot" id="who"></small>
+    <button id="forget" class="btn danger">この端末の登録を消す</button>
+  </details>
+</section>
 </main>
+
+<nav class="dock hide" id="dock"><div class="dock-in">
+  <a href="./" class="on"><b>▣</b>受付</a>
+  <a href="kanri.html"><b>☰</b>運営</a>
+</div></nav>
+
 <script src="jsQR.js"></script>
 <script>
 (function(){
@@ -65,68 +102,79 @@ var $=function(i){return document.getElementById(i)};
 function load(){try{return JSON.parse(localStorage.getItem(STORE)||'null')}catch(e){return null}}
 function save(o){try{localStorage.setItem(STORE,JSON.stringify(o));return true}catch(e){return false}}
 function clear(){try{localStorage.removeItem(STORE)}catch(e){}}
-function show(t,c){var m=$('msg');m.textContent=t;m.className=c||''}
-function note(t){var m=$('msg0');m.textContent=t;m.className='box'+(t?'':' hide')}
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
+function note(t,c){var m=$('msg0');m.textContent=t;m.className='note '+(c||'ng')+(t?'':' hide')}
 function postTo(u,o){var b=new URLSearchParams();for(var k in o)b.set(k,o[k]);return fetch(u,{method:'POST',body:b}).then(function(x){return x.json()})}
 function post(o){return postTo(API,o)}
 function randHex(n){var a=new Uint8Array(n);crypto.getRandomValues(a);var s='';for(var i=0;i<n;i++)s+=('0'+a[i].toString(16)).slice(-2);return s}
+var WD=['日','月','火','水','木','金','土'];
+function dayText(d){var p=d.split('-');if(p.length<3)return '';var w=new Date(Date.UTC(+p[0],p[1]-1,+p[2])).getUTCDay();return (+p[1])+'月'+(+p[2])+'日（'+WD[w]+'）'}
 
 var me=load();
 var q=new URLSearchParams(location.search);
 var today=new Date(Date.now()+9*3600*1000).toISOString().slice(0,10);
-var last='',lastAt=0,busy=false,camOn=false;
+var last='',lastAt=0,busy=false,camOn=false,L={arrived:[],notYet:[],left:[]},tab='arrived';
 
-function lists(r){if(!r||!r.lists)return;
-$('n1').textContent='（'+r.lists.arrived.length+'人）';$('l1').textContent=r.lists.arrived.join('、')||'まだいません';
-$('n2').textContent='（'+r.lists.notYet.length+'人）';$('l2').textContent=r.lists.notYet.join('、')||'いません';
-$('n3').textContent='（'+r.lists.left.length+'人）';$('l3').textContent=r.lists.left.join('、')||'いません'}
+/* 読み取りの結果を、はんこと大きな名前で見せる */
+function show(kind,stamp,who,what,pop){var r=$('result');r.className='result r-'+kind;var s=$('stamp');s.textContent=stamp;
+s.className='stamp';if(pop){void s.offsetWidth;s.className='stamp pop'}$('who2').textContent=who;$('what').textContent=what||''}
+function showMsg(message,cls,scanned){var i=message.indexOf('\n');var who=i>=0?message.slice(0,i):message;var what=i>=0?message.slice(i+1):'';
+var kind=cls==='out'?'out':cls==='warn'?'warn':cls==='ok'?'ok':'ng';
+var stamp=kind==='out'?'退出':kind==='ng'?'不可':(i>=0?'到着':'済');
+show(kind,stamp,who.replace(/ さん$/,' さん'),what,scanned);
+if(scanned&&navigator.vibrate){try{navigator.vibrate(kind==='ng'?[60,60,60]:kind==='warn'?[120,60,120]:120)}catch(e){}}}
+function idle(){show('idle','受付','読み取りを待っています','')}
+
+function names(){var box=$('names');box.textContent='';var a=L[tab]||[];var k=tab==='arrived'?'here':tab==='left'?'gone':'yet';
+box.parentNode.className='list sec s-'+k;
+if(!a.length){box.appendChild(el('div','empty',tab==='notYet'?'全員そろっています':tab==='arrived'?'まだ誰も来ていません':'まだ誰も帰っていません'));return}
+a.forEach(function(t){var m=/^(.*)（(.*)）$/.exec(t);var c=el('div','chip');c.appendChild(el('div','cname',m?m[1]:t));if(m)c.appendChild(el('div','csub',m[2]));box.appendChild(c)})}
+function lists(r){if(!r||!r.lists)return;L=r.lists;$('n1').textContent=L.arrived.length;$('n2').textContent=L.notYet.length;$('n3').textContent=L.left.length;names()}
+Array.prototype.forEach.call(document.querySelectorAll('.tile'),function(b){b.onclick=function(){tab=b.dataset.k;Array.prototype.forEach.call(document.querySelectorAll('.tile'),function(x){x.className=x.className.replace(/\s*on$/,'')});b.className+=' on';names()}});
 
 function send(code){if(busy)return;busy=true;
 post({op:code?'scan':'open',device:me.device,key:me.key,day:$('day').value,code:code||''}).then(function(r){busy=false;
-if(r.auth===false){stopCam();show(r.message,'ng');return}
-lists(r);
-if(!code){show('ネームプレートのQRコードをかざしてください','');return}
-show(r.message,r.cls||'')}).catch(function(e){busy=false;show('通信に失敗しました。もう一度かざしてください。','ng')})}
+if(r.auth===false){stopCam();show('ng','不可','この端末では受付できません',r.message);return}
+lists(r);$('dayLabel').textContent=dayText($('day').value)||'検証用';
+if(!code){idle();return}
+showMsg(r.message,r.cls||'',true)}).catch(function(){busy=false;show('ng','不可','通信に失敗しました','もう一度かざしてください。',true)})}
 
 function tick(){if(!camOn)return;var v=$('v');
 if(v.readyState===v.HAVE_ENOUGH_DATA){var c=$('c');c.width=v.videoWidth;c.height=v.videoHeight;var x=c.getContext('2d');x.drawImage(v,0,0);
 var im=x.getImageData(0,0,c.width,c.height);var r=window.jsQR?jsQR(im.data,c.width,c.height):null;
 if(r&&r.data){var now=Date.now();if(r.data!==last||now-lastAt>5000){last=r.data;lastAt=now;send(r.data)}}}
 setTimeout(tick,250)}
-
-function stopCam(){camOn=false;var v=$('v');if(v.srcObject){v.srcObject.getTracks().forEach(function(t){t.stop()});v.srcObject=null}v.style.display='none'}
-
+function stopCam(){camOn=false;var v=$('v');if(v.srcObject){v.srcObject.getTracks().forEach(function(t){t.stop()});v.srcObject=null}}
+function camOff(text){$('startWrap').className='start';$('frame').className='frame hide';$('hint').textContent=text}
 function startCam(){
-if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){show('この画面ではカメラが使えません。管理番号を手で入力してください。','warn');return}
-navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(s){var v=$('v');v.srcObject=s;v.style.display='block';$('cam').className='hide';
-var p=v.play();if(p&&p.catch)p.catch(function(){});camOn=true;tick()}).catch(function(e){$('cam').className='';
-show('カメラを開けませんでした（'+e.name+'）。\n「カメラを始める」を押すか、管理番号を手で入力してください。','warn')})}
+if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camOff('この画面ではカメラが使えません。下の欄から管理番号を入れてください。');return}
+navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(s){var v=$('v');v.srcObject=s;
+$('startWrap').className='start hide';$('frame').className='frame';$('hint').textContent='ネームプレートのQRコードを枠に入れる';
+var p=v.play();if(p&&p.catch)p.catch(function(){});camOn=true;tick()}).catch(function(e){camOff('カメラを開けませんでした（'+e.name+'）')})}
 
-function openApp(){$('reg').className='hide';$('app').className='';note('');
+function openApp(){$('reg').className='hide';$('app').className='';$('dock').className='dock';note('');
 $('who').textContent='この端末：'+me.name+'（'+me.device+'）';
-startCam();
+idle();startCam();
 if(q.get('day')){$('day').value=q.get('day');send('');return}
 $('day').value=today;
 postTo(KANRI,{op:'nextday',device:me.device,key:me.key}).then(function(r){if(r&&r.day)$('day').value=r.day;send('')}).catch(function(){send('')})}
-
-function openReg(){$('app').className='hide';$('reg').className='';
+function openReg(){$('app').className='hide';$('dock').className='dock hide';$('reg').className='';
 var h=new URLSearchParams(location.hash.replace(/^#/,''));if(h.get('t'))$('code').value=h.get('t')}
 
 $('regbtn').onclick=function(){var code=$('code').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase();
 if(code.length<8){note('登録コードを入れてください。');return}
-var key=randHex(32);note('登録しています…');
+var key=randHex(32);note('登録しています…','warn');
 post({op:'register',code:code,key:key}).then(function(r){
 if(!r.ok){note(r.message||'登録できませんでした。');return}
 me={device:r.device,key:key,name:r.name};
 if(!save(me)){note('この端末は情報を保存できない設定のため、登録できませんでした。\nプライベートブラウズを切るか、ふだん使っているブラウザで開き直してください。');me=null;return}
 history.replaceState(null,'',location.pathname+location.search);
-openApp()}).catch(function(e){note('通信に失敗しました。もう一度試してください。')})};
-
+openApp()}).catch(function(){note('通信に失敗しました。もう一度試してください。')})};
 $('cam').onclick=startCam;
 $('mbtn').onclick=function(){var m=$('manual').value.trim();if(m){send('yumeaka:'+m);$('manual').value=''}};
 $('day').onchange=function(){send('')};
 $('forget').onclick=function(){var k=$('forget');
-if(!k.dataset.sure){k.dataset.sure='1';k.textContent='本当に消す（もう一度押す）';setTimeout(function(){delete k.dataset.sure;k.textContent='この端末の登録を消す'},4000);return}
+if(!k.dataset.sure){k.dataset.sure='1';k.textContent='本当に消す（もう一度押す）';setTimeout(function(){delete k.dataset.sure;k.textContent='この端末の登録を消す'},6000);return}
 delete k.dataset.sure;k.textContent='この端末の登録を消す';stopCam();var old=me;
 var fin=function(){clear();me=null;openReg()};
 postTo(KANRI,{op:'forget',device:old.device,key:old.key}).then(fin).catch(fin)};

@@ -1,0 +1,106 @@
+/* 夢アカ 予約・受付の共通デザイン。ネームプレートの紺の帯と、区分の色をそのまま使う。 */
+:root{
+  --ink:#16213e;      /* ネームプレートの紺 */
+  --ink-2:#4a5573;
+  --bg:#e9eef4;       /* 机の上の色 */
+  --paper:#ffffff;
+  --line:#d5dde8;
+  --brand:#009688;    /* メンバーの緑 */
+  --yet:#f5b301; --yet-bg:#fff6d9; --yet-ink:#7a5600;
+  --here:#0e9f6e; --here-bg:#dff6ec; --here-ink:#06603f;
+  --gone:#2f6fde; --gone-bg:#e1ecff; --gone-ink:#17438f;
+  --late:#d93025; --late-bg:#fde8e6;
+  --adult:#6a3fc4; --walk:#d9730d;
+  --round:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
+  --body:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.6;padding-bottom:84px}
+main{max-width:720px;margin:0 auto;padding:14px 14px 24px}
+a{color:inherit}
+.hide{display:none!important}
+:focus-visible{outline:3px solid var(--gone);outline-offset:2px}
+
+/* 上の帯：ネームプレートと同じ紺 */
+.band{background:var(--ink);color:#fff;position:sticky;top:0;z-index:5}
+.band-in{max-width:720px;margin:0 auto;padding:10px 14px;display:flex;align-items:center;gap:12px}
+.mark{font-family:var(--round);font-weight:900;font-size:15px;letter-spacing:.12em;line-height:1.1}
+.mark small{display:block;font-size:10px;font-weight:500;letter-spacing:.04em;opacity:.7}
+.band-title{font-family:var(--round);font-weight:700;font-size:17px;margin-left:auto;text-align:right}
+.band-title small{display:block;font-size:11px;font-weight:500;opacity:.75}
+
+/* 下の切り替え：受付と運営を親指で行き来する */
+.dock{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-top:1px solid var(--line);z-index:6;padding-bottom:env(safe-area-inset-bottom)}
+.dock-in{max-width:720px;margin:0 auto;display:flex}
+.dock a{flex:1;text-align:center;text-decoration:none;padding:9px 4px 10px;font-family:var(--round);font-weight:700;font-size:13px;color:var(--ink-2);border-top:4px solid transparent;margin-top:-1px}
+.dock a b{display:block;font-size:22px;line-height:1.2;font-weight:400}
+.dock a.on{color:var(--ink);border-top-color:var(--brand)}
+
+/* 面 */
+.card{background:var(--paper);border-radius:18px;padding:16px;margin:12px 0;border:1px solid var(--line)}
+.card h2{font-family:var(--round);font-size:22px;font-weight:900;margin:0}
+.meta{font-size:13.5px;color:var(--ink-2);margin-top:4px}
+.dayhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.floor{display:inline-block;padding:3px 10px;border-radius:8px;background:var(--here-bg);color:var(--here-ink);font-weight:700;font-size:13px}
+.txt{font-size:15px}
+
+/* 3つの数字 */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 8px}
+.tile{border-radius:14px;padding:10px 6px 9px;text-align:center;border:0;font:inherit;cursor:pointer;width:100%}
+.tile .num{font-family:var(--round);font-size:36px;font-weight:900;line-height:1}
+.tile .lab{font-family:var(--round);font-size:12.5px;font-weight:700;margin-top:3px}
+.t-yet{background:var(--yet-bg);color:var(--yet-ink)}
+.t-here{background:var(--here-bg);color:var(--here-ink)}
+.t-gone{background:var(--gone-bg);color:var(--gone-ink)}
+.tile.on{box-shadow:inset 0 0 0 3px currentColor}
+.bar{display:flex;height:10px;border-radius:999px;overflow:hidden;background:var(--line);margin:0 0 6px}
+.seg.t-yet{background:var(--yet)}.seg.t-here{background:var(--here)}.seg.t-gone{background:var(--gone)}
+
+/* 状態ごとの枠と、1人1枚の札 */
+.sec{margin-top:14px;border-radius:14px;padding:10px}
+.s-yet{background:var(--yet-bg)}.s-here{background:var(--here-bg)}.s-gone{background:var(--gone-bg)}
+.sechead{font-family:var(--round);font-size:15px;font-weight:900;margin:0 2px 8px}
+.s-yet .sechead{color:var(--yet-ink)}.s-here .sechead{color:var(--here-ink)}.s-gone .sechead{color:var(--gone-ink)}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.chip{background:var(--paper);border-radius:10px;padding:8px 10px 8px 12px;border-left:7px solid var(--line)}
+.s-yet .chip{border-left-color:var(--yet)}.s-here .chip{border-left-color:var(--here)}.s-gone .chip{border-left-color:var(--gone)}
+.chip.late{border-left-color:var(--late);background:var(--late-bg)}
+.ctop{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cname{font-family:var(--round);font-size:18px;font-weight:900}
+.csub{font-size:12.5px;color:var(--ink-2);margin-top:1px}
+.badge{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;color:#fff}
+.b-adult{background:var(--adult)}.b-walk{background:var(--walk)}.b-late{background:var(--late)}
+.empty{font-size:14px;color:var(--ink-2);padding:2px 4px}
+details{margin-top:14px;font-size:14px}summary{font-weight:700;color:var(--ink-2);cursor:pointer}
+
+/* ボタンと入力 */
+button{font-family:var(--round);cursor:pointer}
+.btn{display:block;width:100%;font-size:18px;font-weight:900;padding:14px;border-radius:14px;border:0;background:var(--brand);color:#fff;margin:8px 0}
+.btn.quiet{background:transparent;color:var(--ink-2);border:2px solid var(--line);font-weight:700;font-size:15px}
+.btn.danger{background:transparent;color:var(--late);border:2px solid var(--late);font-weight:700;font-size:15px}
+.btn:active{transform:translateY(1px)}
+.act{font-size:14px;padding:8px 12px;border-radius:10px;border:0;background:var(--brand);color:#fff;font-weight:700}
+.act.warn{background:var(--late)}
+input[type=text],input[type=date],input:not([type]){font:inherit;font-size:17px;padding:12px;border-radius:12px;border:2px solid var(--line);width:100%;background:var(--paper);color:var(--ink)}
+label{font-size:13px;font-weight:700;color:var(--ink-2);display:block;margin:10px 0 4px}
+.note{margin:10px 0;padding:12px 14px;border-radius:12px;font-size:15.5px;font-weight:700;white-space:pre-line}
+.note.ok{background:var(--here-bg);color:var(--here-ink)}
+.note.out{background:var(--gone-bg);color:var(--gone-ink)}
+.note.ng{background:var(--late-bg);color:#8f1d15}
+.note.warn{background:var(--yet-bg);color:var(--yet-ink)}
+small.foot{display:block;color:var(--ink-2);font-size:12.5px;margin-top:14px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+td{padding:8px 4px;border-top:1px solid var(--line);vertical-align:middle}
+.tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700}
+.tag.live{background:var(--here-bg);color:var(--here-ink)}.tag.stop{background:var(--late-bg);color:#8f1d15}.tag.yet{background:var(--bg);color:var(--ink-2)}
+.pills{display:flex;gap:8px;margin:12px 0 4px}
+.pills button{font-size:15px;font-weight:700;padding:9px 16px;border-radius:999px;border:2px solid var(--line);background:var(--paper);color:var(--ink-2)}
+.pills button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+
+/* はんこ：読み取りの結果を押す */
+.stamp{width:104px;height:104px;border-radius:50%;border:6px solid currentColor;display:flex;align-items:center;justify-content:center;font-family:var(--round);font-weight:900;font-size:30px;letter-spacing:.06em;transform:rotate(-9deg);flex:none;position:relative}
+.stamp::after{content:"";position:absolute;inset:5px;border-radius:50%;border:2px solid currentColor;opacity:.55}
+.stamp.pop{animation:press .28s cubic-bezier(.2,1.4,.4,1)}
+@keyframes press{from{transform:rotate(-9deg) scale(1.7);opacity:0}to{transform:rotate(-9deg) scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.stamp.pop{animation:none}}
