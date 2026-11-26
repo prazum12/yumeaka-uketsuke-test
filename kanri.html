@@ -118,7 +118,7 @@ var tc=el('div','card');tc.appendChild(el('h2','','テストの道具'));
 var lg=el('a','','操作の記録（操作ログ）を開く');lg.href=r.sheetUrl+'#gid=927863012';lg.target='_blank';lg.rel='noopener';var lp=el('p');lp.appendChild(lg);tc.appendChild(lp);
 tc.appendChild(el('p','','環境をリセットすると、予約・入退室・顔写真・テストの参加者・この端末以外の受付の端末を消し、活動日を「今日・明日・1週間後」で作り直します。操作の記録は消えません。'));
 var rb=el('button','act warn','環境をリセットする');rb.onclick=function(){if(rb.dataset.sure){delete rb.dataset.sure;rb.textContent='環境をリセットする';resetAll()}else{rb.dataset.sure='1';rb.textContent='本当にリセットする（もう一度押す）';setTimeout(function(){delete rb.dataset.sure;rb.textContent='環境をリセットする'},4000)}};
-tc.appendChild(rb);tc.appendChild(el('small','','終わるまで20秒ほどかかります。Discordの予約の投稿も、新しいものに入れ替わります。'));V.appendChild(tc)}
+tc.appendChild(rb);var rs=el('small','','終わるまで20秒ほどかかります。Discordの予約の投稿も、新しいものに入れ替わります。');rs.style.display='block';rs.style.marginTop='8px';tc.appendChild(rs);V.appendChild(tc)}
 }
 Array.prototype.forEach.call(document.querySelectorAll('#nav button'),function(b){b.onclick=function(){Array.prototype.forEach.call(document.querySelectorAll('#nav button'),function(x){x.className=x.className.replace(/\s*on/,'')});b.className=(b.className+' on').trim();['days','people','devices'].forEach(function(i){$(i).className=i===b.dataset.tab?'':'hide'})}});
 if(!me||!me.device||!me.key){$('who').textContent='';$('load').className='loading hide';$('days').textContent='';msg('この端末は登録されていません。\n受付の画面から登録してください。','ng');var a=el('a','','受付の画面へ');a.href='./';$('days').appendChild(a)}else load();
