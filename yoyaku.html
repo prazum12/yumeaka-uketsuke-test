@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>夢アカ 予約（検証用）</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;margin:0;background:#f4f1ea;color:#1c2540}
+main{max-width:560px;margin:0 auto;padding:16px}
+h1{font-size:18px;margin:6px 0 4px}
+#who{font-size:15px;margin:0 0 14px;opacity:.8}
+.day{background:#fff;border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.day h2{font-size:22px;margin:0 0 6px}
+.meta{font-size:14px;line-height:1.7;opacity:.8}
+.ticket{margin:12px 0;padding:14px;border-radius:12px;background:#e6f4f1;border:2px dashed #009688}
+.ticket b{display:block;font-size:13px;color:#00796b;letter-spacing:.1em}
+.ticket span{font-size:24px;font-weight:700}
+.none{margin:12px 0;padding:12px;border-radius:12px;background:#f0f0f0;font-size:15px}
+.row{display:flex;gap:10px;align-items:center;margin:10px 0;font-size:15px}
+select{font-size:17px;padding:8px;border-radius:10px;border:1px solid #bbb;background:#fff}
+button{font-size:17px;padding:12px;border-radius:12px;border:0;width:100%;margin:6px 0;font-weight:700;background:#009688;color:#fff}
+button.sub{background:#e0e0e0;color:#333;font-weight:400}
+#msg{margin:12px 0;padding:14px;border-radius:12px;font-size:17px;font-weight:700;white-space:pre-line;display:none}
+.ok{background:#d7f0e3;color:#0b6b43}.out{background:#dbe8fb;color:#134a96}.ng{background:#fbdcda;color:#9a1c14}
+small{display:block;opacity:.65;line-height:1.6;margin-top:16px}
+</style>
+</head>
+<body>
+<main>
+<h1>夢アカ 活動日の予約（検証用）</h1>
+<p id="who">読み込んでいます…</p>
+<div id="msg"></div>
+<div id="days"></div>
+<small>このページのアドレスは、あなた専用です。ほかの人には教えないでください。</small>
+</main>
+<script>
+(function(){
+var API='https://yasuulab-n8n.xvps.jp/webhook/yumeaka-yoyaku-page-api-e7b204';
+var $=function(i){return document.getElementById(i)};
+var key=new URLSearchParams(location.hash.replace(/^#/,'')).get('k')||'';
+var busy=false;
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
+function msg(t,c){var m=$('msg');m.textContent=t||'';m.className=c||'';m.style.display=t?'block':'none'}
+function times(from,to){var a=[],f=from.split(':'),t=to.split(':');for(var m=f[0]*60+ +f[1];m<=t[0]*60+ +t[1];m+=30){a.push(('0'+Math.floor(m/60)).slice(-2)+':'+('0'+m%60).slice(-2))}return a}
+function sel(list,val){var s=el('select');list.forEach(function(v){var o=el('option','',v);o.value=v;if(v===val)o.selected=true;s.appendChild(o)});return s}
+function call(o){if(busy)return;busy=true;var b=new URLSearchParams();o.key=key;for(var k in o)b.set(k,o[k]);
+fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;render(r)}).catch(function(){busy=false;msg('通信に失敗しました。もう一度試してください。','ng')})}
+function render(r){
+if(!r.ok){$('who').textContent='';$('days').textContent='';msg(r.message||'このリンクは使えません。','ng');return}
+$('who').textContent=r.name+' さん（No. '+r.no+'）';msg(r.message,r.cls);
+var box=$('days');box.textContent='';
+if(!r.days.length){box.appendChild(el('div','none','いま予約できる活動日はありません。'))}
+r.days.forEach(function(d){
+var c=el('div','day');c.appendChild(el('h2','',d.label));
+var m=el('div','meta');m.appendChild(el('div','','開いている時間：'+d.open+'〜'+d.close+'（みんながそろう時間 '+d.core+'）'));
+m.appendChild(el('div','','予約の締切：'+d.deadline+(d.late?'（締切を過ぎていますが、予約と取り消しはできます）':'')));
+m.appendChild(el('div','','いま予約している人：'+d.seats+'人'));c.appendChild(m);
+if(d.reserved){var t=el('div','ticket');t.appendChild(el('b','','予約票'));t.appendChild(el('span','',d.arr+'〜'+d.lea));c.appendChild(t)}
+else c.appendChild(el('div','none','まだ予約していません。'));
+var all=times(d.open,d.close);var a=sel(all.slice(0,-1),d.arr),l=sel(all.slice(1),d.lea);
+var row=el('div','row');row.appendChild(el('span','','来る時刻'));row.appendChild(a);row.appendChild(el('span','','帰る時刻'));row.appendChild(l);c.appendChild(row);
+var go=el('button','',d.reserved?'この時刻に変える':'予約する');go.onclick=function(){call({op:'reserve',day:d.id,arr:a.value,lea:l.value})};c.appendChild(go);
+if(d.reserved){var x=el('button','sub','予約を取り消す');x.onclick=function(){call({op:'cancel',day:d.id})};c.appendChild(x)}
+box.appendChild(c)})}
+if(!key){$('who').textContent='';msg('このページは、あなた専用のリンクから開いてください。','ng')}else call({op:'view'});
+})();
+</script>
+</body>
+</html>
