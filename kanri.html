@@ -157,7 +157,7 @@ c.appendChild(t);c.appendChild(el('small','','新しい端末の登録は、Disc
 // 検証用の環境だけの道具：操作の記録を見る、環境をはじめの状態に戻す
 var tc=el('div','card');tc.appendChild(el('h2','','テストの道具'));
 var lg=el('a','','操作の記録（操作ログ）を開く');lg.href=r.sheetUrl+'#gid=927863012';lg.target='_blank';lg.rel='noopener';var lp=el('p');lp.appendChild(lg);tc.appendChild(lp);
-tc.appendChild(el('p','','環境をリセットすると、いまのデータを控えのスプレッドシートに残したうえで、予約・入退室・顔写真・テストの参加者・この端末以外の受付の端末を消します。活動日は「今日（テスト用）と、これから1年ぶん（毎月の第2土曜と第3日曜）」で作り直し、架空のメンバーの予約と、ミニ講義を入れ直します。操作の記録は消えません。'));var vl=el('a','','これまでの控え（版の一覧）を開く');vl.href=r.sheetUrl+'#gid=3103';vl.target='_blank';vl.rel='noopener';var vp=el('p');vp.appendChild(vl);tc.appendChild(vp);tc.appendChild(el('p','','毎朝4時にも、自動でリセットされます。'));
+tc.appendChild(el('p','','環境をリセットすると、いまのデータを控えのスプレッドシートに残したうえで、予約・入退室・顔写真・テストの参加者・この端末以外の受付の端末を消します。活動日は「今日（テスト用）と、これから1年ぶん（毎月の第2土曜と第3日曜）」で作り直し、架空のメンバーの予約と、ミニ講義を入れ直します。操作の記録は消えません。'));var vl=el('a','','これまでの控え（版の一覧）を開く');vl.href=r.sheetUrl+'#gid=3103';vl.target='_blank';vl.rel='noopener';var vp=el('p');vp.appendChild(vl);tc.appendChild(vp);tc.appendChild(el('p','','毎週月曜の朝4時にも、自動でリセットされます。'));
 var rb=el('button','act warn','環境をリセットする');rb.onclick=function(){if(rb.dataset.sure){delete rb.dataset.sure;rb.textContent='環境をリセットする';resetAll()}else{rb.dataset.sure='1';rb.textContent='本当にリセットする（もう一度押す）';setTimeout(function(){delete rb.dataset.sure;rb.textContent='環境をリセットする'},4000)}};
 tc.appendChild(rb);var rs=el('small','','終わるまで30秒ほどかかります。');rs.style.display='block';rs.style.marginTop='8px';tc.appendChild(rs);V.appendChild(tc)}
 }
