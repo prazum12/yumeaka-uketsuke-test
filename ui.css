@@ -160,3 +160,7 @@ body{font-weight:500}
 .ticket .stub{background:#55646b}
 .band-title small{opacity:1;color:var(--ink-2)}
 ::selection{background:#fbf8c4}
+
+/* 登録の状況：せまい画面では、名前の下に札を並べる */
+.tag{white-space:nowrap}
+@media (max-width:560px){.ptab tr{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:10px 0;border-top:1px solid var(--line)}.ptab td{border-top:0;padding:0}.ptab td:first-child{flex:1 1 100%}}
