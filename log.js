@@ -2,7 +2,7 @@
    画面から受け口に送った操作と、その結果を、表の「操作ログ」に残す。
    鍵・専用リンク・写真・登録コードは送らない。 */
 (function(){
-var LOG='https://yasuulab-n8n.xvps.jp/webhook/yumeaka-yoyaku-log-7d31e4';
+var LOG='https://yasuulab-n8n.xvps.jp/webhook/sagyou-yumeaka-yoyaku-log-7d31e4';
 var SKIP={face:1,photos:1,roster:1,nextday:1};
 var NAMES={open:'受付の画面を開く',scan:'QRを読み取る',tap:'名前から受け付ける',photo:'顔写真を保存する',register:'端末を登録する',forget:'端末の登録を消す',overview:'運営画面を開く',addLecture:'講義を足す',stopLecture:'講義を中止する',addDay:'活動日を足す',editLecture:'講義を直す',editDay:'活動日を直す',stopDay:'活動日を中止する',stopDevice:'端末を止める',removePhoto:'顔写真を消す',me:'自分の登録を開く',confirm:'登録の内容を確かめる',view:'予約のページを開く',reserve:'予約する',joinLecture:'講義に参加する',leaveLecture:'講義の参加をやめる',cancel:'予約を取り消す',reset:'環境をリセットする'};
 var page=(location.pathname.split('/').pop()||'index.html');
@@ -13,7 +13,7 @@ var F=window.fetch?window.fetch.bind(window):null;
 function send(op,res,msg){try{var b=new URLSearchParams();b.set('src',SRC);b.set('who',who||((page==='index.html'||page==='kanri.html'||page==='')?dev():''));b.set('op',String(op).slice(0,50));b.set('res',res);b.set('msg',String(msg||'').slice(0,300));b.set('ua',(navigator.userAgent||'').slice(0,140));
 if(navigator.sendBeacon){navigator.sendBeacon(LOG,b)}else if(F){F(LOG,{method:'POST',body:b,keepalive:true}).catch(function(){})}}catch(e){}}
 if(F){window.fetch=function(u,o){var p=F(u,o);try{
-if(typeof u==='string'&&u.indexOf('/webhook/yumeaka-yoyaku-')>0&&u!==LOG&&o&&o.body&&o.body.get){
+if(typeof u==='string'&&u.indexOf('/webhook/sagyou-yumeaka-yoyaku-')>0&&u!==LOG&&o&&o.body&&o.body.get){
 var op=o.body.get('op')||'view',extra='';
 if(!SKIP[op]){
 if(op==='scan')extra=String(o.body.get('code')||'').replace(/^yumeaka:/,'').slice(0,20);
