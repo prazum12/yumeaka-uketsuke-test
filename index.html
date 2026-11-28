@@ -54,6 +54,7 @@
     <input id="code" autocomplete="off" autocapitalize="characters" placeholder="XXXX-XXXX">
     <button id="regbtn" class="btn">登録する</button>
     <div id="msg0" class="note hide"></div>
+    <small class="foot"><a href="tsukaikata.html#uketsuke">受付の使い方</a></small>
   </div>
 </section>
 
@@ -84,7 +85,7 @@
   <div class="list"><div class="tiphint" id="tip"></div><div class="chips" id="names"><div class="sk" style="margin:0;border:0;padding:4px"><i class="w80"></i><i class="w60"></i></div></div></div>
 
   <button id="rosterBtn" class="btn quiet hide">ネームプレートを忘れた人を、名簿から選ぶ</button>
-  <small class="foot">ネームプレートを忘れた人には、運営が予備のネームプレートを渡します。運営画面で結びつけたあと、予備のネームプレートを読み取ってください。</small>
+  <small class="foot">ネームプレートを忘れた人には、運営が予備のネームプレートを渡します。運営画面で結びつけたあと、予備のネームプレートを読み取ってください。<a href="tsukaikata.html#uketsuke">受付の使い方</a></small>
 
   <details>
     <summary>日付の変更・この端末について</summary>
@@ -141,7 +142,7 @@ var kind=cls==='out'?'out':cls==='warn'?'warn':cls==='ok'?'ok':'ng';
 var stamp=kind==='out'?'退出':kind==='ng'?'不可':(i>=0?'到着':'済');
 show(kind,stamp,who.replace(/ さん$/,' さん'),what,scanned);
 if(scanned&&navigator.vibrate){try{navigator.vibrate(kind==='ng'?[60,60,60]:kind==='warn'?[120,60,120]:120)}catch(e){}}}
-function idle(){face('');setTarget(null);show('idle','受付','読み取りを待っています','')}
+function idle(){face('');setTarget(null);show('idle','受付','読み取りを待っています','来たときも、帰るときも、ネームプレートを読み取ります')}
 function waiting(){show('idle','','準備しています','名簿と予約を確かめています');$('stamp').className='stamp wait'}
 
 function names(){var box=$('names');box.textContent='';var a=L[tab]||[];var k=tab==='arrived'?'here':tab==='left'?'gone':'yet';

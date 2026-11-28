@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<!-- このページが読み込んでよいものの指定。プログラムは読み込まず、通信もしない -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#16213e">
+<title>夢アカ 使い方（検証用）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ui.css?v=23">
+<style>
+body{padding-bottom:24px}
+.card ol,.card ul{margin:10px 0 0;padding-left:1.4em;font-size:15px}
+.card li{margin:6px 0}
+.card h3{font-size:16px;font-weight:900;margin:16px 0 0}
+.jump{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.jump a{font-size:14px;font-weight:700;padding:8px 12px;border-radius:999px;border:2px solid var(--line);color:var(--ink-2);text-decoration:none}
+</style>
+</head>
+<body>
+<header class="band"><div class="band-in">
+  <div class="mark">横須賀プログラミング"夢"アカデミー</div>
+  <div class="band-title">使い方<small>検証用</small></div>
+</div></header>
+<main>
+<nav class="jump" aria-label="このページの中の移動">
+  <a href="#hajime">はじめに</a><a href="#yoyaku">予約する</a><a href="#toujitsu">活動日の当日</a><a href="#uketsuke">受付をする人へ</a><a href="#komatta">困ったとき</a>
+</nav>
+
+<div class="card" id="hajime">
+  <h2>はじめに</h2>
+  <ol>
+    <li>運営から、あなた専用の登録コード（8文字）を受け取ります。</li>
+    <li><a href="login.html">ログインの画面</a>で、登録コードを入れます。</li>
+    <li>マイページの「ネームプレート・登録」で、呼び名を確かめて「この内容で確認する」を押します。</li>
+  </ol>
+  <p class="txt">登録コードが使えるのは、運営が出してから7日間で、1回だけです。ログインのあとに「GoogleやDiscordで入れるようにする」と出たときは、自分のアカウントを結びつけてください。次からは、それで入れます。</p>
+</div>
+
+<div class="card" id="yoyaku">
+  <h2>予約する</h2>
+  <ol>
+    <li>マイページの「予約・講義」を開きます。</li>
+    <li>行く日の予約票で、来る時刻と帰る時刻を選びます（30分ごと）。</li>
+    <li>「この時刻で予約する」を押します。</li>
+  </ol>
+  <h3>時刻を変える・取り消す</h3>
+  <p class="txt">同じ予約票で時刻を選び直して「この時刻に変える」を押します。行けなくなったときは「行けなくなったので取り消す」を押します。締切を過ぎても、活動日が終わるまでは、予約も取り消しもできます。</p>
+  <h3>満席のとき</h3>
+  <p class="txt">席がいっぱいの時間は、順番待ちで受け付けます。席が取れたら、お知らせします。</p>
+  <h3>ミニ講義</h3>
+  <p class="txt">その日に行く予約をすると、予約票の下の「この日の講義」で「参加する」を押せます。</p>
+</div>
+
+<div class="card" id="toujitsu">
+  <h2>活動日の当日</h2>
+  <ul>
+    <li>来たときと、帰るときに、受付でネームプレートのQRコードを読み取ってもらいます。</li>
+    <li>紙のネームプレートを忘れたときは、マイページの「ネームプレート・登録」に出る画像を見せても、受付できます。</li>
+    <li>どちらもないときは、運営に伝えてください。予備のネームプレートを渡します。</li>
+  </ul>
+</div>
+
+<div class="card" id="uketsuke">
+  <h2>受付をする人へ</h2>
+  <h3>受付に使う端末を登録する（最初の1回）</h3>
+  <ol>
+    <li>運営画面の「受付の端末」で「受付の端末の登録コードを出す」を押します。</li>
+    <li>受付に使うスマートフォンで受付の画面を開き、登録コードを入れて「登録する」を押します。</li>
+  </ol>
+  <p class="txt">この登録コードが使えるのは10分間で、1回だけです。</p>
+  <h3>受付する</h3>
+  <ul>
+    <li>ネームプレートのQRコードを、カメラの枠に入れます。来たときは「到着」、帰るときは「退出」と出ます。</li>
+    <li>帰るときにネームプレートがない人は、下の一覧で名前を押すと、退出を記録できます。</li>
+    <li>ネームプレートを忘れた人には、運営が予備のネームプレートを渡します。運営画面で結びつけたあと、予備のネームプレートを読み取ります。</li>
+    <li>カメラが映らないときは、数秒待ちます。映らないままのときは、ブラウザの設定でカメラを許可してください。</li>
+  </ul>
+</div>
+
+<div class="card" id="komatta">
+  <h2>困ったとき</h2>
+  <ul>
+    <li>「ログインが必要です」と出る、機種を変えた：<a href="login.html">ログインの画面</a>から、もう一度入ってください。GoogleかDiscordを結びつけてある人は、それで入れます。</li>
+    <li>登録コードがない、どの方法でも入れない：運営に伝えてください。新しい登録コードを出します。</li>
+    <li>呼び名を変えたい：マイページの「ネームプレート・登録」で直せます。</li>
+    <li>そのほか、分からないことは、運営に聞いてください。</li>
+  </ul>
+</div>
+
+<small class="foot" style="text-align:center"><a href="yoyaku.html">マイページ</a>　<a href="login.html">ログインの画面</a></small>
+</main>
+</body>
+</html>

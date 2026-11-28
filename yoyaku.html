@@ -69,11 +69,12 @@ return {key:(L&&L.token)||'',hash:'',out:function(){try{localStorage.removeItem(
 <p class="hello" id="who"></p>
 <div class="loading" id="load"><span class="ring"></span>予約のようすを確かめています</div>
 <div id="msg" class="note hide"></div>
+<div id="todo" class="card hide" aria-label="はじめにすること"></div>
 <div id="notices" class="card ntc hide" aria-label="お知らせ"></div>
 <div id="ask" class="card ask hide" role="alertdialog" aria-label="時間を変える確認"></div>
 <div id="cal" class="card cal hide" aria-label="活動日のカレンダー"></div>
 <div id="days"><div class="sk tk"><b></b><div><i class="h"></i><i class="w80"></i><i class="block"></i></div></div><div class="sk tk"><b></b><div><i class="h"></i><i class="w80"></i><i class="block"></i></div></div></div>
-<small class="foot">ログインしたままの端末を、ほかの人に貸さないでください。<a href="login.html">ログインの画面（ログアウトもここから）</a></small>
+<small class="foot">ログインしたままの端末を、ほかの人に貸さないでください。<a href="login.html">ログインの画面（ログアウトもここから）</a>　<a href="tsukaikata.html">使い方</a></small>
 </main>
 <script>
 (function(){
@@ -115,12 +116,21 @@ c.appendChild(g);
 var lg=el('div','callegend');var a=el('span','');a.appendChild(el('i','k open'));a.appendChild(document.createTextNode('活動日'));var b=el('span','');b.appendChild(el('i','k booked'));b.appendChild(document.createTextNode('予約ずみ'));var t2=el('span','');t2.appendChild(el('i','k today'));t2.appendChild(document.createTextNode('今日'));
 lg.appendChild(a);lg.appendChild(b);lg.appendChild(t2);c.appendChild(lg)}
 var R=null;
+// 本人の確認がまだの人に、はじめにすることを知らせる。確認が済んだ人は、この端末に印を残して、次からは問い合わせない
+var CK='yumeaka_confirmed_v1',ckDone=false;
+function checkConfirm(no){if(ckDone)return;ckDone=true;var ok='';try{ok=localStorage.getItem(CK)||''}catch(e){}
+if(ok===String(no))return;var b=new URLSearchParams();b.set('op','me');b.set('token',key);
+fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(m){if(!m||!m.ok||!m.profile)return;
+if(m.profile.confirmedAt){try{localStorage.setItem(CK,String(no))}catch(e){}return}
+var t=$('todo');t.textContent='';t.appendChild(el('div','lechead','はじめにすること'));
+t.appendChild(el('p','txt','「ネームプレート・登録」のページで、呼び名を確かめて「この内容で確認する」を押してください。1回だけで済みます。'));
+var a=el('a','btn','登録の内容を確かめる');a.href='my.html';a.style.textAlign='center';a.style.textDecoration='none';t.appendChild(a);t.className='card'}).catch(function(){})}
 function render(r){
 $('load').className='loading hide';
 if(r.auth===false&&r.login){window.YumeKey.out();return}
 if(!r.ok){R=null;$('who').textContent='';$('days').textContent='';msg(r.message||'ログインが必要です。','ng');return}
 $('who').textContent=r.name+' さん';$('who').appendChild(el('small','','No. '+r.no));msg(r.message,r.cls);
-R=r;drawCal(r.days);
+R=r;drawCal(r.days);checkConfirm(r.no);
 // お知らせ：運営とメンターが出したもの。期限を過ぎたものと、取り下げたものは、返ってこない
 var nb=$('notices');nb.textContent='';if(r.notices&&r.notices.length){nb.className='card ntc';nb.appendChild(el('div','lechead','お知らせ'));r.notices.forEach(function(n){var o=el('div','one');o.appendChild(el('p','',n.text));o.appendChild(el('small','',(n.by||'')+'　'+(n.at||'')));nb.appendChild(o)})}else nb.className='card ntc hide';
 var ak=$('ask');ak.textContent='';ak.className='card ask hide';

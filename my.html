@@ -92,7 +92,7 @@ return {key:(L&&L.token)||'',hash:'',out:function(){try{localStorage.removeItem(
   </div>
 
   <a class="btn quiet" id="toYoyaku" style="text-align:center;text-decoration:none">予約・講義のページへ</a>
-  <small class="foot">ログインしたままの端末を、ほかの人に貸さないでください。<a href="login.html">ログインの画面（ログアウトもここから）</a></small>
+  <small class="foot">ログインしたままの端末を、ほかの人に貸さないでください。<a href="login.html">ログインの画面（ログアウトもここから）</a>　<a href="tsukaikata.html">使い方</a></small>
 </div>
 </main>
 <script src="qr1m.js?v=1"></script>
@@ -116,6 +116,7 @@ $('role').textContent=P.group;$('role').className='role '+k;$('plateIn').classNa
 $('pname').textContent=P.name;$('pno').textContent='No. '+P.no;
 if(document.activeElement!==$('name'))$('name').value=P.name;
 if(r.photo)setFace(r.photo);else if(!P.hasPhoto)setFace('');
+if(P.confirmedAt){try{localStorage.setItem('yumeaka_confirmed_v1',String(P.no))}catch(e){}}
 $('s1').textContent=P.confirmedAt?'確認済み':'まだ';$('s1').className=P.confirmedAt?'done':'todo';
 $('ok').textContent=P.confirmedAt?'呼び名を直して、もう一度確認する':'この内容で確認する';
 // 顔写真は、ここでは登録も表示もしない（撮るのも見るのも、運営だけ）
