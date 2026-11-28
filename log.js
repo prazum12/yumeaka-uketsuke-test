@@ -18,7 +18,7 @@ var op=o.body.get('op')||'view',extra='';
 if(!SKIP[op]){
 if(op==='scan')extra=String(o.body.get('code')||'').replace(/^yumeaka:/,'').slice(0,20);
 if(op==='tap'||op==='photo')extra=o.body.get('no')||'';
-if(op==='reserve'||op==='cancel')extra=o.body.get('day')||'';
+if(op==='reserve'||op==='cancel')extra=(o.body.get('day')||'')+(o.body.get('dropLectures')?'・講義の参加を取り消す了解あり':'');
 if(op==='joinLecture'||op==='leaveLecture')extra=(o.body.get('lecture')||'')+(o.body.get('confirm')?'・時間を変える了解あり':'');
 if(op==='stopDevice'||op==='removePhoto')extra=o.body.get('target')||'';
 if(op==='editLecture'||op==='editDay'||op==='stopDay')extra=o.body.get('target')||'';if(op==='stopLecture')extra=o.body.get('target')||'';if(op==='addLecture')extra=(o.body.get('day')||'')+' '+String(o.body.get('title')||'').slice(0,20);if(op==='addDay')extra=o.body.get('date')||'';
