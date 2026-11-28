@@ -28,6 +28,7 @@
   <button data-tab="devices" id="tDevices">受付の端末</button>
 </div>
 <div id="msg" class="note hide"></div>
+<div id="inv" class="card hide"></div>
 <div class="loading" id="load"><span class="ring"></span>今日のようすを集めています</div>
 <div id="days"><div class="sk"><i class="h"></i><i class="w80"></i><i class="block"></i><i class="w60"></i></div></div>
 <div id="people" class="hide"></div>
@@ -60,12 +61,26 @@ render(r);if(!keep)msg('')}).catch(function(){busy=false;document.body.classList
 function resetAll(){if(busy)return;busy=true;document.body.classList.add('busy');msg('リセットしています。30秒ほど待ってください。','ok');var b=new URLSearchParams();b.set('op','reset');b.set('sure','reset');b.set('device',me.device);b.set('key',me.key);if(me.token)b.set('token',me.token);
 fetch(RESET,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;document.body.classList.remove('busy');if(r.auth===false){msg(r.message,'ng');return}if(r.reload){load(function(){msg(r.message,r.cls)})}else msg(r.message,r.cls||'ng')}).catch(function(){busy=false;document.body.classList.remove('busy');msg('通信に失敗しました。リセットが終わったかどうかは、少し待ってから開き直して確かめてください。','ng')})}
 // 講義・活動日の操作：断られたときは、入れた内容を残したまま知らせる
-function plan(o,clear){if(busy)return;busy=true;document.body.classList.add('busy');var b=new URLSearchParams();o.device=me.device;o.key=me.key;if(me.token)o.token=me.token;for(var k in o)b.set(k,o[k]);
+function plan(o,clear,show){if(busy)return;busy=true;document.body.classList.add('busy');var b=new URLSearchParams();o.device=me.device;o.key=me.key;if(me.token)o.token=me.token;for(var k in o)b.set(k,o[k]);
 fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;document.body.classList.remove('busy');if(r.auth===false){msg(r.message,'ng');return}
-if(r.done){(clear||[]).forEach(function(i){if($(i))$(i).value=''});load(function(){msg(r.message+(r.secret?'\n\n'+r.secret:''),r.cls)})}else{msg(r.message,r.cls||'ng')}window.scrollTo({top:0,behavior:'smooth'})})
+if(r.done){(clear||[]).forEach(function(i){if($(i))$(i).value=''});load(function(){if(show)show(r);else msg(r.message+(r.secret?'\n\n'+r.secret:''),r.cls)})}else{msg(r.message,r.cls||'ng')}window.scrollTo({top:0,behavior:'smooth'})})
 .catch(function(){busy=false;document.body.classList.remove('busy');msg('通信に失敗しました。もう一度試してください。','ng')})}
 function load(after){busy=false;var b=new URLSearchParams();b.set('op','overview');b.set('device',me.device);b.set('key',me.key);if(me.token)b.set('token',me.token);busy=true;document.body.classList.add('busy');
 fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;document.body.classList.remove('busy');$('load').className='loading hide';if(r.auth===false){msg(r.message,'ng');return}render(r);if(after)after()}).catch(function(){busy=false;document.body.classList.remove('busy');$('load').className='loading hide';msg('通信に失敗しました。','ng')})}
+// 招待リンクを出したあとの表示。リンクの中身は、受け口が出した登録コード（ログインの画面のアドレスの # のうしろにつける。# のうしろは、サーバーには送られない）
+function invite(p,r){var m=/([0-9A-Z]{4})-?([0-9A-Z]{4})/.exec(String(r.secret||''));if(!m){msg(r.message+(r.secret?'\n\n'+r.secret:''),r.cls);return}
+var u=new URL('login.html',location.href);u.search='';u.hash='';var page=u.href,url=page+'#c='+m[1]+m[2],code=m[1]+'-'+m[2];
+var c=$('inv');c.textContent='';c.className='card';msg('');
+c.appendChild(el('h2','',p.name+' さん（No. '+p.no+'）の招待リンク'));
+c.appendChild(el('p','txt','このリンクを、本人だけに送ってください。本人がリンクを開いて「この招待で始める」を押すと、ログインできます。使えるのは1回だけで、期限は7日です。'));
+var lb=el('label','','招待リンク');lb.setAttribute('for','invUrl');c.appendChild(lb);
+var t=el('textarea');t.id='invUrl';t.readOnly=true;t.value=url;t.style.minHeight='72px';t.style.fontSize='14px';t.style.wordBreak='break-all';t.onfocus=function(){t.select()};c.appendChild(t);
+var cb=el('button','btn','リンクをコピー');cb.onclick=function(){copy(url,cb)};c.appendChild(cb);
+var body=p.name+' さんへ\n\n夢アカの予約ページに入るための、あなた専用の招待リンクです。\n\n'+url+'\n\n・リンクを開いて、「この招待で始める」を押してください。\n・そのあと、画面の案内にそって、GoogleかDiscordのアカウントを結びつけてください。次からは、それで入れます。\n・使えるのは1回だけで、期限は7日です。\n・リンクを開けないときは、ログインの画面（'+page+'）で、登録コード '+code+' を入れてください。\n・このメールは、ほかの人に見せたり、送ったりしないでください。';
+var ma=el('a','btn quiet','メールを書く');ma.href='mailto:?subject='+encodeURIComponent('夢アカの予約ページ：招待リンク')+'&body='+encodeURIComponent(body);ma.style.textAlign='center';ma.style.textDecoration='none';c.appendChild(ma);
+c.appendChild(el('div','txt','リンクを開けない人には、登録コードを伝えてください：'+code));
+var x=el('button','btn quiet','渡し終わったので、閉じる');x.onclick=function(){c.textContent='';c.className='card hide'};c.appendChild(x);
+c.appendChild(el('small','foot','リンクと登録コードは、いまこの画面にだけ出ています。閉じると、もう表示できません（そのときは、もう一度出してください。前のリンクは、使われなければ7日で切れます）。\nDiscordを使っている人は、招待なしで入れます（表の「メンバー」の discord_id に、その人のDiscordのIDを入れます）。'))}
 function people(title,list){var w=document.createDocumentFragment();w.appendChild(el('h3','',title+'（'+list.length+'人）'));
 if(!list.length){w.appendChild(el('div','txt','いません'));return w}
 var t=el('table');list.forEach(function(p){var tr=el('tr');tr.appendChild(el('td','',p.name));tr.appendChild(el('td','','No. '+p.no));tr.appendChild(el('td','',p.time));
@@ -127,13 +142,13 @@ pc.appendChild(el('div','meta','在籍 '+act.length+'人　本人の確認 '+nC+
 var pt=el('table','ptab');r.people.forEach(function(p){var tr=el('tr');var a=el('td');a.appendChild(el('div','cname',p.name));a.appendChild(el('div','csub',(r.me.isAdmin?(p.real?p.real:'本名まだ')+'　':'')+'No. '+p.no+'　'+p.group+((p.state&&p.state!=='在籍')?'　名簿の状態：'+p.state:'')));tr.appendChild(a);
 [[p.confirmed,'確認済み','確認まだ'],[p.hasPhoto,'写真あり','写真まだ'],[p.linked,'Discord結びつき済み',p.discordOk?'Discordまだ':'Discordなし']].forEach(function(x,i){if(i===1&&!r.me.photoOn)return;var td=el('td');td.appendChild(el('span','tag '+(x[0]?'live':'yet'),x[0]?x[1]:x[2]));
 if(i===1&&p.hasPhoto&&r.me.isAdmin){var k=el('button','act quiet','写真を消す');k.style.display='block';k.style.marginTop='6px';k.onclick=function(){if(k.dataset.sure){call({op:'removePhoto',target:p.no})}else{k.dataset.sure='1';k.className='act warn';k.textContent='本当に消す（戻せません）';setTimeout(function(){delete k.dataset.sure;k.className='act quiet';k.textContent='写真を消す'},6000)}};td.appendChild(k)}
-tr.appendChild(td)});if(r.me.isAdmin&&(!p.state||p.state==='在籍')){var ctd=el('td');var cb=el('button','act quiet','登録コードを出す');cb.onclick=function(){if(cb.dataset.sure){plan({op:'issueCode',target:p.no})}else{cb.dataset.sure='1';cb.textContent='本当に出す';setTimeout(function(){delete cb.dataset.sure;cb.textContent='登録コードを出す'},4000)}};ctd.appendChild(cb);tr.appendChild(ctd)}pt.appendChild(tr)});
+tr.appendChild(td)});if(r.me.isAdmin&&(!p.state||p.state==='在籍')){var ctd=el('td');var cb=el('button','act quiet','招待リンクを出す');cb.onclick=function(){if(cb.dataset.sure){plan({op:'issueCode',target:p.no},null,function(x){invite(p,x)})}else{cb.dataset.sure='1';cb.textContent='本当に出す';setTimeout(function(){delete cb.dataset.sure;cb.textContent='招待リンクを出す'},4000)}};ctd.appendChild(cb);tr.appendChild(ctd)}pt.appendChild(tr)});
 pc.appendChild(pt);
 if(r.me.isAdmin){var ex=el('button','btn quiet','本名つきの出席の記録を保存する（CSV）');ex.onclick=function(){var b=new URLSearchParams();b.set('op','attendance');b.set('device',me.device);b.set('key',me.key);if(me.token)b.set('token',me.token);fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(q){if(!q||!q.attendance){msg((q&&q.message)||'出せませんでした。','ng');return}
 var rows=[['活動日','管理番号','本名','呼び名','区分','到着','退出','記録した人']].concat(q.attendance);var csv='﻿'+rows.map(function(a){return a.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'}).join(',')}).join('\r\n');
 var u=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));var a=el('a');a.href=u;a.download='shusseki_'+r.today+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},3000);msg('本名つきの出席の記録を保存しました（'+q.attendance.length+'件）。','ok')}).catch(function(){msg('通信に失敗しました。','ng')})};pc.appendChild(ex)}
 pc.appendChild(el('small','foot','本人の確認は、マイページの「ネームプレート・登録」で本人が行います。'+(r.me.isAdmin?'本名は、運営にだけ出ています。':'')+(r.me.photoOn?'顔写真は、運営が活動日に受付で撮ります。見られるのは運営だけです。退会・修了した人の顔写真は「写真を消す」で消します。消した写真は元に戻せません。':'')));Q.appendChild(pc);
-if(r.me.isAdmin){var mc=el('div','card');mc.appendChild(el('h2','','名簿に人を足す（テストの参加者）'));var ml=el('label','','呼び名（12文字まで）');ml.setAttribute('for','mName');mc.appendChild(ml);var mn=el('input');mn.id='mName';mn.maxLength=12;mc.appendChild(mn);var ml2=el('label','','役割');ml2.setAttribute('for','mGroup');mc.appendChild(ml2);var mg=el('select');mg.id='mGroup';['メンバー','メンター'].forEach(function(v){var o=el('option','',v);o.value=v;mg.appendChild(o)});mc.appendChild(mg);var mb=el('button','btn','この人を名簿に足す');mb.onclick=function(){plan({op:'addMember',name:$('mName').value,group:$('mGroup').value},['mName'])};mc.appendChild(mb);mc.appendChild(el('small','','足したあと、上の一覧で「登録コードを出す」を押し、出たコードを本人に渡してください。ここで足した人（番号が51以上）は、毎週のリセットで消えます。運営として足すことは、ここからはできません（表の「メンバー」を直します）。'));Q.appendChild(mc)}}
+if(r.me.isAdmin){var mc=el('div','card');mc.appendChild(el('h2','','名簿に人を足す（テストの参加者）'));var ml=el('label','','呼び名（12文字まで）');ml.setAttribute('for','mName');mc.appendChild(ml);var mn=el('input');mn.id='mName';mn.maxLength=12;mc.appendChild(mn);var ml2=el('label','','役割');ml2.setAttribute('for','mGroup');mc.appendChild(ml2);var mg=el('select');mg.id='mGroup';['メンバー','メンター'].forEach(function(v){var o=el('option','',v);o.value=v;mg.appendChild(o)});mc.appendChild(mg);var mb=el('button','btn','この人を名簿に足す');mb.onclick=function(){plan({op:'addMember',name:$('mName').value,group:$('mGroup').value},['mName'])};mc.appendChild(mb);mc.appendChild(el('small','','足したあと、上の一覧で「招待リンクを出す」を押し、出たリンクを本人に送ってください（Discordを使っている人は、表の「メンバー」の discord_id にDiscordのIDを入れると、招待なしで入れます）。ここで足した人（番号が51以上）は、毎週のリセットで消えます。運営として足すことは、ここからはできません（表の「メンバー」を直します）。'));Q.appendChild(mc)}}
 // 講義・活動日：これからの講義を見る、講義を足す、活動日を足す（活動日は運営だけ）
 var PL=$('plan');var keep={};Array.prototype.forEach.call(PL.querySelectorAll('input,select,textarea'),function(x){if(x.id)keep[x.id]=x.value});PL.textContent='';
 function fld(parent,label,node){var l=el('label','',label);l.setAttribute('for',node.id);parent.appendChild(l);parent.appendChild(node);return node}
