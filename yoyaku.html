@@ -61,14 +61,11 @@ body{padding-bottom:24px}
 </div></header>
 <main>
 <nav class="mytabs" aria-label="マイページの中の移動"><a id="tabY" class="on">予約・講義</a><a id="tabM" class="">ネームプレート・登録</a></nav>
-<script>/* 専用リンクの鍵：アドレスから読んだら、このタブの中だけの保管場所に移し、アドレスと履歴からは消す */
-window.YumeKey=(function(){var k=new URLSearchParams((location.hash||'').replace(/^#/,'')).get('k')||'',kept=false;
-if(k){try{sessionStorage.setItem('yumeaka_mykey',k);kept=sessionStorage.getItem('yumeaka_mykey')===k}catch(e){kept=false}
-if(kept){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}}
-else{try{k=sessionStorage.getItem('yumeaka_mykey')||''}catch(e){k=''}kept=!!k}
-var h=(k&&!kept)?'#k='+encodeURIComponent(k):'';
-document.getElementById('tabY').href='yoyaku.html'+h;document.getElementById('tabM').href='my.html'+h;
-return {key:k,hash:h}})();</script>
+<script>/* ログインの鍵：この端末の中の保管場所から読む。アドレスには載せない。ないときは、ログインの画面へ動く */
+window.YumeKey=(function(){var L=null;try{L=JSON.parse(localStorage.getItem('yumeaka_login_v1')||'null')}catch(e){}
+document.getElementById('tabY').href='yoyaku.html';document.getElementById('tabM').href='my.html';
+var here=/my\.html/.test(location.pathname)?'my':'yoyaku';
+return {key:(L&&L.token)||'',hash:'',out:function(){try{localStorage.removeItem('yumeaka_login_v1')}catch(e){}location.replace('login.html?next='+here)}}})();</script>
 <p class="hello" id="who"></p>
 <div class="loading" id="load"><span class="ring"></span>予約のようすを確かめています</div>
 <div id="msg" class="note hide"></div>
@@ -76,7 +73,7 @@ return {key:k,hash:h}})();</script>
 <div id="ask" class="card ask hide" role="alertdialog" aria-label="時間を変える確認"></div>
 <div id="cal" class="card cal hide" aria-label="活動日のカレンダー"></div>
 <div id="days"><div class="sk tk"><b></b><div><i class="h"></i><i class="w80"></i><i class="block"></i></div></div><div class="sk tk"><b></b><div><i class="h"></i><i class="w80"></i><i class="block"></i></div></div></div>
-<small class="foot">このページのアドレスは、あなた専用です。ほかの人には教えないでください。</small>
+<small class="foot">ログインしたままの端末を、ほかの人に貸さないでください。<a href="login.html">ログインの画面（ログアウトもここから）</a></small>
 </main>
 <script>
 (function(){
@@ -89,7 +86,7 @@ function msg(t,c){var m=$('msg');m.textContent=t||'';m.className='note '+(c||'ng
 function toMin(t){var p=t.split(':');return p[0]*60+ +p[1]}
 function toHM(m){return ('0'+Math.floor(m/60)).slice(-2)+':'+('0'+m%60).slice(-2)}
 function busyOn(v){busy=v;document.body.classList[v?'add':'remove']('busy');Array.prototype.forEach.call(document.querySelectorAll('#days button'),function(x){x.disabled=v})}
-function call(o){if(busy)return;busyOn(true);var b=new URLSearchParams();o.key=key;for(var k in o)b.set(k,o[k]);
+function call(o){if(busy)return;busyOn(true);var b=new URLSearchParams();o.token=key;for(var k in o)b.set(k,o[k]);
 fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busyOn(false);render(r)}).catch(function(){busyOn(false);$('load').className='loading hide';msg('通信に失敗しました。もう一度試してください。','ng')})}
 function stepper(cap,val,min,max,onchange){var w=el('div','step');w.appendChild(el('div','cap',cap));var row=el('div','row');
 var a=el('button','','−'),v=el('div','val',toHM(val)),b=el('button','','＋');a.setAttribute('aria-label',cap+'を30分早める');b.setAttribute('aria-label',cap+'を30分遅らせる');
@@ -120,7 +117,8 @@ lg.appendChild(a);lg.appendChild(b);lg.appendChild(t2);c.appendChild(lg)}
 var R=null;
 function render(r){
 $('load').className='loading hide';
-if(!r.ok){R=null;$('who').textContent='';$('days').textContent='';msg(r.message||'このリンクは使えません。','ng');return}
+if(r.auth===false&&r.login){window.YumeKey.out();return}
+if(!r.ok){R=null;$('who').textContent='';$('days').textContent='';msg(r.message||'ログインが必要です。','ng');return}
 $('who').textContent=r.name+' さん';$('who').appendChild(el('small','','No. '+r.no));msg(r.message,r.cls);
 R=r;drawCal(r.days);
 // お知らせ：運営とメンターが出したもの。期限を過ぎたものと、取り下げたものは、返ってこない
@@ -189,7 +187,7 @@ if(!d.reserved)lb.appendChild(el('small','lecnote',d.waiting?'順番待ちのあ
 b.appendChild(lb)}
 t.appendChild(b);box.appendChild(t)});
 if(busy)busyOn(true)}
-if(!key){$('load').className='loading hide';$('days').textContent='';msg('このページは、あなた専用のリンクから開いてください。','ng')}else call({op:'view'});
+if(!key){window.YumeKey.out()}else call({op:'view'});
 })();
 </script>
 </body>
