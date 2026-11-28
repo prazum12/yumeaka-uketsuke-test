@@ -13,12 +13,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="ui.css?v=23">
-<script src="log.js?v=6"></script>
+<script src="log.js?v=7"></script>
 <style>
 body{padding-bottom:24px}
 #code{letter-spacing:.12em;text-transform:uppercase;font-weight:700}
 .or{margin:16px 0 6px;font-size:13px;color:var(--ink-2);font-weight:700}
 .btn+.btn{margin-top:10px}
+#out{margin-top:10px}
+#linkBox .foot{margin-bottom:6px}
+#formCard>div+div{margin-top:26px}
+#inCard .note{margin:0 0 14px}
 </style>
 </head>
 <body>
@@ -31,22 +35,35 @@ body{padding-bottom:24px}
 <div id="msg" class="note hide"></div>
 
 <div class="card hide" id="formCard">
-  <h2>登録コードで入る</h2>
-  <p class="txt">運営から受け取った、あなた専用の登録コードを入れてください。使えるのは1回だけで、そのあとは、この端末にログインしたままになります。</p>
-  <label for="code">登録コード（8文字）</label>
-  <input id="code" autocomplete="off" autocapitalize="characters" placeholder="XXXX-XXXX" maxlength="12">
-  <button id="go" class="btn">ログインする</button>
-  <div class="or">ほかの方法</div>
-  <button id="google" class="btn quiet" disabled>Googleでログイン（準備中）</button>
-  <button id="discord" class="btn quiet" disabled>Discordでログイン（準備中）</button>
-  <small class="foot">登録コードがない人、なくした人、機種を変えた人は、運営に伝えてください。新しいコードを出します。</small>
+  <div id="codeSec">
+    <h2 id="codeH">登録コードで入る</h2>
+    <p class="txt" id="codeTxt"></p>
+    <label for="code">登録コード（8文字）</label>
+    <input id="code" autocomplete="off" autocapitalize="characters" placeholder="XXXX-XXXX" maxlength="12">
+    <button id="go" class="btn">ログインする</button>
+  </div>
+  <div id="oauthSec">
+    <h2 id="oauthH" class="hide">GoogleかDiscordでログイン</h2>
+    <p class="txt hide" id="oauthTxt">前に結びつけた、自分のアカウントで入ります。</p>
+    <div class="or" id="oauthOr">ほかの方法</div>
+    <button id="google" class="btn quiet" disabled>Googleでログイン（準備中）</button>
+    <button id="discord" class="btn quiet" disabled>Discordでログイン（準備中）</button>
+  </div>
+  <small class="foot" id="formFoot"></small>
 </div>
 
 <div class="card hide" id="inCard">
   <h2>ログインしています</h2>
   <p class="txt" id="inWho"></p>
+  <div id="tempNote" class="note warn hide"></div>
   <a id="toYoyaku" class="btn" href="yoyaku.html" style="text-align:center;text-decoration:none">マイページを開く</a>
   <a id="toKanri" class="btn quiet hide" href="kanri.html" style="text-align:center;text-decoration:none;margin-top:10px">運営画面を開く</a>
+  <div id="linkBox" class="hide">
+    <div class="or" id="linkOr">次から、GoogleやDiscordで入れるようにする</div>
+    <button id="linkGoogle" class="btn quiet hide"></button>
+    <button id="linkDiscord" class="btn quiet hide"></button>
+    <small class="foot">結びつけておくと、機種を変えたときや、ログインが切れたときに、自分で入り直せます。自分のアカウントだけを結びつけてください。</small>
+  </div>
   <button id="out" class="btn quiet">ログアウトする</button>
   <small class="foot">自分のものではない端末では、使い終わったらログアウトしてください。</small>
 </div>
@@ -55,31 +72,95 @@ body{padding-bottom:24px}
 (function(){
 var API='https://yasuulab-n8n.xvps.jp/webhook/yumeaka-yoyaku-login-api-9d27c4';
 var STORE='yumeaka_login_v1';
+var PEND='yumeaka_oauth_v1';
+var LABEL={google:'Google',discord:'Discord'};
 var $=function(i){return document.getElementById(i)};
-var next=new URLSearchParams(location.search).get('next')||'';
-var dest=next==='kanri'?'kanri.html':next==='my'?'my.html':'yoyaku.html';
-var busy=false;
+var qs=new URLSearchParams(location.search);
+var okNext=function(n){return (n==='kanri'||n==='my')?n:''};
+var next=okNext(qs.get('next')||'');
+var destOf=function(n){return n==='kanri'?'kanri.html':n==='my'?'my.html':'yoyaku.html'};
+// PV：使える方法、LK：結びつけてある方法、TEMP：登録コードでの一時的なログインか、EXP：ログインの期限
+var busy=false,PV={},LK={},TEMP=false,EXP='',arm='';
 function load(){try{return JSON.parse(localStorage.getItem(STORE)||'null')}catch(e){return null}}
 function save(o){try{localStorage.setItem(STORE,JSON.stringify(o));return true}catch(e){return false}}
 function clear(){try{localStorage.removeItem(STORE)}catch(e){}}
 function msg(t,c){var m=$('msg');m.textContent=t||'';m.className='note '+(c||'ng')+(t?'':' hide')}
 function post(o){var b=new URLSearchParams();for(var k in o)b.set(k,o[k]);return fetch(API,{method:'POST',body:b}).then(function(x){return x.json()})}
-// GoogleとDiscordでのログインは、準備ができてから使えるようにする（それまでは「準備中」）
-function providers(p){['google','discord'].forEach(function(k){var on=!!(p&&p[k]);$(k).disabled=!on;$(k).textContent=(k==='google'?'Google':'Discord')+'でログイン'+(on?'':'（準備中）')})}
+function lock(on){busy=on;document.body.classList[on?'add':'remove']('busy');$('go').disabled=on}
+function anyOn(){return !!(PV.google||PV.discord)}
+function when(x){var m=/^\d{4}-(\d\d)-(\d\d) (\d\d):(\d\d)/.exec(String(x||''));return m?(+m[1])+'月'+(+m[2])+'日 '+m[3]+':'+m[4]:''}
+// ログインの画面のならび。GoogleかDiscordが使えるときは、それを上に出し、登録コードは「はじめての人」のものとして下に出す。
+// どちらも準備中のあいだは、これまでどおり、登録コードを上に出す
+function providers(p){PV=p||{};var any=anyOn();
+['google','discord'].forEach(function(k){var on=!!PV[k];$(k).disabled=!on;$(k).className=(any&&on)?'btn':'btn quiet';$(k).textContent=LABEL[k]+'でログイン'+(on?'':'（準備中）')});
+var f=$('formCard');if(any)f.insertBefore($('oauthSec'),$('codeSec'));else f.insertBefore($('codeSec'),$('oauthSec'));
+$('oauthH').className=any?'':'hide';$('oauthTxt').className=any?'txt':'txt hide';$('oauthOr').className=any?'or hide':'or';
+$('go').className=any?'btn quiet':'btn';
+$('codeH').textContent=any?'はじめての人は、登録コードで入る':'登録コードで入る';
+$('codeTxt').textContent=any?'運営から受け取った、あなた専用の登録コードを入れてください。使えるのは1回だけです。入ったあとに、GoogleかDiscordを結びつけると、次からはそれで入れます。':'運営から受け取った、あなた専用の登録コードを入れてください。使えるのは1回だけで、そのあとは、この端末にログインしたままになります。';
+$('formFoot').textContent=any?'GoogleもDiscordも使えなくなった人、はじめての登録コードがない人は、運営に伝えてください。新しい登録コードを出します。':'登録コードがない人、なくした人、機種を変えた人は、運営に伝えてください。新しいコードを出します。';
+links()}
+// ログイン中の人に出す、結びつけのボタン。使える方法と、もう結びつけてある方法だけを出す。
+// 登録コードでの一時的なログインのあいだは、これが主役（結びつけるか、前に結びつけたアカウントを確かめると、ふつうのログインに変わる）
+function links(){var any=false,has=!!(LK.google||LK.discord);['google','discord'].forEach(function(k){var b=$(k==='google'?'linkGoogle':'linkDiscord');var show=!!(PV[k]||(LK[k]&&!TEMP));if(show)any=true;
+b.className=(TEMP?'btn':'btn quiet')+(show?'':' hide');
+b.textContent=TEMP?(LK[k]?LABEL[k]+'で確かめて、ログインを続ける':LABEL[k]+'と結びつける'):(LK[k]?(arm===k?'もう一度押すと、'+LABEL[k]+'との結びつけを外します':LABEL[k]+'と結びつけてあります（外す）'):LABEL[k]+'と結びつける')});
+$('linkBox').className=any?'':'hide';
+$('linkOr').textContent=TEMP?'続けて使うために':'次から、GoogleやDiscordで入れるようにする';
+var t=$('tempNote');t.className=TEMP?'note warn':'note warn hide';
+t.textContent=TEMP?('いまは、登録コードでの一時的なログインです'+(when(EXP)?'（'+when(EXP)+' まで）':'')+'。\n'+(has?'下のボタンで、前に結びつけたアカウントを確かめると、ふつうのログイン（30日）に変わります。':'続けて使うには、下のボタンで、GoogleかDiscordを結びつけてください。次からは、それで入れます。')):'';
+var y=$('toYoyaku');y.className=TEMP?'btn quiet':'btn';y.textContent=(TEMP?'あとでする（':'')+(next==='kanri'?'運営画面を開く':'マイページを開く')+(TEMP?'）':'');
+if(TEMP&&any)$('inCard').insertBefore($('linkBox'),y);else $('inCard').insertBefore($('linkBox'),$('out'))}
 function showForm(){$('load').className='loading hide';$('inCard').className='card hide';$('formCard').className='card'}
-function showIn(me){$('load').className='loading hide';$('formCard').className='card hide';$('inCard').className='card';$('inWho').textContent=me.name+' さん（No. '+me.no+'）として、ログインしています。';$('toKanri').className=(me.role==='運営'||me.role==='メンター')?'btn quiet':'btn quiet hide'}
-var L=load();
-if(L&&L.token){post({op:'who',token:L.token}).then(function(r){if(r&&r.ok){L.no=r.me.no;L.name=r.me.name;L.role=r.me.role;save(L);providers(r.providers);if(next){location.replace(dest);return}showIn(r.me)}else{clear();providers(r&&r.providers);showForm();msg('ログインが切れています。もう一度、入ってください。','warn')}}).catch(function(){showForm();msg('通信に失敗しました。もう一度試してください。','ng')})}
-else{showForm();post({op:'config'}).then(function(r){providers(r&&r.providers)}).catch(function(){})}
+function showIn(me){$('load').className='loading hide';$('formCard').className='card hide';$('inCard').className='card';$('inWho').textContent=me.name+' さん（No. '+me.no+'）として、ログインしています。';$('toYoyaku').href=destOf(next);$('toKanri').className=(next!=='kanri'&&(me.role==='運営'||me.role==='メンター'))?'btn quiet':'btn quiet hide';links()}
+// ふだんの始まり。note があれば、画面を出したあとに、その知らせを出す
+function boot(note){var L=load();var say=function(){if(note)msg(note.t,note.c)};
+if(L&&L.token){post({op:'who',token:L.token}).then(function(r){if(r&&r.ok){L.no=r.me.no;L.name=r.me.name;L.role=r.me.role;L.exp=r.exp||L.exp;save(L);LK=r.linked||{};TEMP=!!r.temp;EXP=r.exp||'';providers(r.providers);if(next&&!note&&!TEMP){location.replace(destOf(next));return}showIn(r.me);say()}else{clear();LK={};TEMP=false;providers(r&&r.providers);showForm();msg('ログインが切れています。もう一度、入ってください。','warn')}}).catch(function(){providers(PV);showForm();msg('通信に失敗しました。もう一度試してください。','ng')})}
+else{LK={};TEMP=false;post({op:'config'}).then(function(r){providers(r&&r.providers);showForm();say()}).catch(function(){providers(PV);showForm();say()})}}
+// GoogleやDiscordの画面へ行く。mode は、login（ログインする）か、link（いまログイン中の人に結びつける）
+// 合図（state）は、この端末で作って覚えておき、戻ってきたときに同じものかを確かめる（ほかの人が作ったリンクを踏まされても、通さないため）
+function start(k,mode){if(busy)return;var a=new Uint8Array(16);crypto.getRandomValues(a);var st=Array.prototype.map.call(a,function(x){return('0'+x.toString(16)).slice(-2)}).join('');
+try{localStorage.setItem(PEND,JSON.stringify({state:st,provider:k,mode:mode,next:next,t:Date.now()}))}catch(e){msg('この端末は情報を保存できない設定のため、'+LABEL[k]+'を使えません。\nプライベートブラウズを切るか、ふだん使っているブラウザで開き直してください。','ng');return}
+lock(true);msg(LABEL[k]+'の画面に移ります…','warn');
+post({op:'oauthStart',provider:k,state:st}).then(function(r){if(r&&r.ok&&/^https:\/\/(accounts\.google\.com|discord\.com)\//.test(r.url||'')){location.href=r.url;return}
+lock(false);try{localStorage.removeItem(PEND)}catch(e){}if(r&&r.providers)providers(r.providers);msg((r&&r.message)||(LABEL[k]+'の画面に移れませんでした。もう一度試してください。'),(r&&r.cls)||'ng')}).catch(function(){lock(false);msg('通信に失敗しました。もう一度試してください。','ng')})}
+// GoogleやDiscordから戻ってきたあと、受け取った合図（code）を受け口に送って、確かめてもらう
+function finish(pd,code){var L=load();var k=pd.provider;msg(LABEL[k]+'で確かめています…','warn');
+post({op:'oauthFinish',provider:k,mode:pd.mode,code:code,token:(pd.mode==='link'&&L&&L.token)||''}).then(function(r){
+if(pd.mode==='link'){boot({t:(r&&r.message)||'結びつけられませんでした。もう一度試してください。',c:(r&&r.ok)?'ok':'ng'});return}
+if(!r||!r.ok||!r.token){boot({t:(r&&r.message)||'ログインできませんでした。',c:'ng'});return}
+if(!save({token:r.token,exp:r.exp,no:r.me.no,name:r.me.name,role:r.me.role})){providers(r.providers||PV);showForm();msg('この端末は情報を保存できない設定のため、ログインできませんでした。\nプライベートブラウズを切るか、ふだん使っているブラウザで開き直してください。','ng');return}
+location.replace(destOf(next))}).catch(function(){boot({t:'通信に失敗しました。もう一度試してください。',c:'ng'})})}
+// 始まり。アドレスに state がついていれば、GoogleやDiscordから戻ってきたところ
+if(qs.get('state')){var pd=null;try{pd=JSON.parse(localStorage.getItem(PEND)||'null')}catch(e){}try{localStorage.removeItem(PEND)}catch(e){}
+var same=!!(pd&&LABEL[pd.provider]&&pd.state===qs.get('state')&&Date.now()-pd.t<600000);var code=qs.get('code')||'';
+if(same)next=okNext(pd.next);
+// 合図をアドレスに残さない（履歴や、あとから開き直したときのため）
+try{history.replaceState(null,'',location.pathname+(next?'?next='+next:''))}catch(e){}
+if(!same)boot({t:'もう一度、はじめからやり直してください。\nボタンを押したのと同じブラウザで、10分以内に戻ってくる必要があります。',c:'ng'});
+else if(!code)boot({t:LABEL[pd.provider]+'での確認を、取りやめました。',c:'warn'});
+else finish(pd,code)}
+else boot();
 $('go').onclick=function(){if(busy)return;var code=$('code').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase();if(code.length!==8){msg('登録コードは、8文字です。','ng');return}
-busy=true;document.body.classList.add('busy');$('go').disabled=true;msg('確かめています…','warn');
-post({op:'code',code:code}).then(function(r){busy=false;document.body.classList.remove('busy');$('go').disabled=false;
+lock(true);msg('確かめています…','warn');
+post({op:'code',code:code}).then(function(r){lock(false);
 if(!r||!r.ok||!r.token){msg((r&&r.message)||'ログインできませんでした。','ng');return}
 if(!save({token:r.token,exp:r.exp,no:r.me.no,name:r.me.name,role:r.me.role})){msg('この端末は情報を保存できない設定のため、ログインできませんでした。\nプライベートブラウズを切るか、ふだん使っているブラウザで開き直してください。','ng');return}
-$('code').value='';location.replace(dest)}).catch(function(){busy=false;document.body.classList.remove('busy');$('go').disabled=false;msg('通信に失敗しました。もう一度試してください。','ng')})};
+$('code').value='';
+// GoogleかDiscordが使えるときは、すぐには移らず、結びつけの画面を出す（登録コードでのログインは、一時的なもの）
+if(r.temp){boot({t:'登録コードで、ログインしました。この登録コードは、もう使えません。',c:'ok'});return}
+location.replace(destOf(next))}).catch(function(){lock(false);msg('通信に失敗しました。もう一度試してください。','ng')})};
 $('code').addEventListener('keydown',function(e){if(e.key==='Enter')$('go').click()});
-$('out').onclick=function(){var x=load();var done=function(){clear();showForm();msg('ログアウトしました。','out')};if(x&&x.token)post({op:'logout',token:x.token}).then(done).catch(done);else done()};
-$('google').onclick=$('discord').onclick=function(){msg('Google・Discordでのログインは、準備中です。いまは、登録コードで入ってください。','warn')};
+$('out').onclick=function(){var x=load();var done=function(){clear();LK={};TEMP=false;arm='';providers(PV);showForm();msg('ログアウトしました。','out')};if(x&&x.token)post({op:'logout',token:x.token}).then(done).catch(done);else done()};
+['google','discord'].forEach(function(k){
+$(k).onclick=function(){if(!PV[k]){msg('Google・Discordでのログインは、準備中です。いまは、登録コードで入ってください。','warn');return}start(k,'login')};
+// 結びつける。一時的なログインのあいだは、前に結びつけたアカウントを確かめるのにも使う。ふつうのログインで、結びつけてあるときは、2回押すと外す（押しまちがいで外れないように）
+$(k==='google'?'linkGoogle':'linkDiscord').onclick=function(){if(busy)return;if(!LK[k]||TEMP){arm='';start(k,'link');return}
+if(arm!==k){arm=k;links();return}
+arm='';var x=load();lock(true);msg('確かめています…','warn');
+post({op:'unlink',provider:k,token:(x&&x.token)||''}).then(function(r){lock(false);if(r&&r.linked)LK=r.linked;links();msg((r&&r.message)||'外せませんでした。もう一度試してください。',(r&&r.ok)?(r.cls||'ok'):'ng')}).catch(function(){lock(false);links();msg('通信に失敗しました。もう一度試してください。','ng')})}});
+// 「戻る」で、このページに戻ってきたときは、押せる状態に戻す
+window.addEventListener('pageshow',function(e){if(e.persisted){lock(false);msg('')}});
 })();
 </script>
 </body>
