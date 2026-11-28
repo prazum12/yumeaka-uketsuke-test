@@ -37,6 +37,14 @@ body{padding-bottom:24px}
 .seats i{width:15px;height:15px;border-radius:4px;background:var(--line);display:block}
 .seats i.f{background:var(--brand)}
 .seats span{font-size:12.5px;color:var(--ink-2);margin-left:6px}
+.slots{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 2px}
+.slot{font-size:12.5px;border-radius:999px;padding:3px 10px;border:1px solid var(--line);background:#fff;color:var(--ink-2)}
+.slot.s-few{border-color:#e0a100;color:#8a6100;background:#fff8e1}
+.slot.s-full{border-color:#c62828;color:#c62828;background:#fdecea}
+.ntc p{white-space:pre-wrap;margin:6px 0 2px}
+.ntc small{color:var(--ink-2)}
+.ntc .one+.one{border-top:1px solid var(--line);margin-top:10px;padding-top:8px}
+.svy{display:inline-block;margin-top:6px;font-weight:700}
 .steps{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 4px}
 .step .cap{font-size:12.5px;font-weight:700;color:var(--ink-2)}
 .step .row{display:flex;align-items:center;border:2px solid var(--line);border-radius:12px;overflow:hidden;margin-top:3px}
@@ -64,6 +72,7 @@ return {key:k,hash:h}})();</script>
 <p class="hello" id="who"></p>
 <div class="loading" id="load"><span class="ring"></span>予約のようすを確かめています</div>
 <div id="msg" class="note hide"></div>
+<div id="notices" class="card ntc hide" aria-label="お知らせ"></div>
 <div id="ask" class="card ask hide" role="alertdialog" aria-label="時間を変える確認"></div>
 <div id="cal" class="card cal hide" aria-label="活動日のカレンダー"></div>
 <div id="days"><div class="sk tk"><b></b><div><i class="h"></i><i class="w80"></i><i class="block"></i></div></div><div class="sk tk"><b></b><div><i class="h"></i><i class="w80"></i><i class="block"></i></div></div></div>
@@ -102,7 +111,7 @@ var first=new Date(Date.UTC(y,m-1,1)).getUTCDay(),last=new Date(Date.UTC(y,m,0))
 for(var i=0;i<first;i++)g.appendChild(el('span','cald none'));
 for(var dd=1;dd<=last;dd++){(function(dd){var id=calYM+'-'+('0'+dd).slice(-2);var hit=null;calDays.forEach(function(d){if(d.id===id)hit=d});
 var cell=el(hit?'button':'span','cald'+(hit?(hit.reserved?' booked':' open'):'')+(id===now?' today':''));cell.appendChild(el('i','',String(dd)));
-if(hit){cell.appendChild(el('small','',hit.reserved?'予約ずみ':(hit.title||'活動日').slice(0,5)));cell.setAttribute('aria-label',m+'月'+dd+'日 '+(hit.reserved?'予約ずみ':'活動日。まだ予約していません'));
+if(hit){cell.appendChild(el('small','',hit.reserved?'予約ずみ':(hit.waiting?'順番待ち':(hit.title||'活動日').slice(0,5))));cell.setAttribute('aria-label',m+'月'+dd+'日 '+(hit.reserved?'予約ずみ':(hit.waiting?'順番待ち':'活動日。まだ予約していません')));
 cell.onclick=function(){var t=document.getElementById('day-'+id);if(t){t.scrollIntoView({behavior:'smooth',block:'center'});t.classList.add('flash');setTimeout(function(){t.classList.remove('flash')},1200)}}}
 g.appendChild(cell)})(dd)}
 c.appendChild(g);
@@ -114,6 +123,8 @@ $('load').className='loading hide';
 if(!r.ok){R=null;$('who').textContent='';$('days').textContent='';msg(r.message||'このリンクは使えません。','ng');return}
 $('who').textContent=r.name+' さん';$('who').appendChild(el('small','','No. '+r.no));msg(r.message,r.cls);
 R=r;drawCal(r.days);
+// お知らせ：運営とメンターが出したもの。期限を過ぎたものと、取り下げたものは、返ってこない
+var nb=$('notices');nb.textContent='';if(r.notices&&r.notices.length){nb.className='card ntc';nb.appendChild(el('div','lechead','お知らせ'));r.notices.forEach(function(n){var o=el('div','one');o.appendChild(el('p','',n.text));o.appendChild(el('small','',(n.by||'')+'　'+(n.at||'')));nb.appendChild(o)})}else nb.className='card ntc hide';
 var ak=$('ask');ak.textContent='';ak.className='card ask hide';
 function closeAsk(t){ak.textContent='';ak.className='card ask hide';msg(t,'out')}
 function showAsk(label,first){ak.className='card ask';ak.setAttribute('aria-label',label);setTimeout(function(){ak.scrollIntoView({behavior:'smooth',block:'center'});first.focus()},50)}
@@ -139,37 +150,42 @@ var list=r.days.filter(function(d){return d.id.slice(0,7)===calYM}).sort(functio
 if(!list.length){box.appendChild(el('div','card',(+calYM.slice(0,4))+'年'+(+calYM.slice(5,7))+'月に、予約できる活動日はありません。'));return}
 list.forEach(function(d){
 var p=d.id.split('-');var wd=(/（(.)）/.exec(d.label)||[])[1]||'';
-var t=el('div','ticket'+(d.reserved?' booked':''));t.id='day-'+d.id;
+var held=d.reserved||d.waiting;var t=el('div','ticket'+(d.reserved?' booked':''));t.id='day-'+d.id;
 var s=el('div','stub');s.appendChild(el('div','mo',(+p[1])+'月'));s.appendChild(el('div','dd',String(+p[2])));s.appendChild(el('div','wd',wd+'曜日'));t.appendChild(s);
 var b=el('div','tbody');
 var st=el('div','state');var tx=el('div');
 var ttl=d.title||'活動日';
 if(d.reserved){tx.appendChild(el('div','lab','予約票　'+ttl));tx.appendChild(el('div','big',d.arr+'〜'+d.lea));st.appendChild(tx);st.appendChild(el('div','stamp mini','予約済'))}
+else if(d.waiting){tx.appendChild(el('div','lab','順番待ち（'+d.waitNo+'番目）　'+ttl));tx.appendChild(el('div','big',d.arr+'〜'+d.lea));st.appendChild(tx);st.appendChild(el('div','stamp mini','順番待ち'))}
 else{tx.appendChild(el('div','lab','まだ予約していません'));tx.appendChild(el('div','big ttl',ttl));st.appendChild(tx)}
 b.appendChild(st);
 // 講義の詳細が登録してあれば、開いて読める
 if(d.detail){var dt=el('details','more');dt.appendChild(el('summary','','くわしく見る'));var dp=el('p','',d.detail);dt.appendChild(dp);b.appendChild(dt)}
-var seats=el('div','seats');for(var i=0;i<10;i++){seats.appendChild(el('i',i<d.seats?'f':''))}
-seats.appendChild(el('span','','いま '+d.seats+'人が予約'+(d.seats>10?'（10人をこえています）':'')));b.appendChild(seats);
+if(d.waiting)b.appendChild(el('div','meta','この時間は席がいっぱいのため、順番待ちで受け付けています。席が取れたらお知らせします。'));
+// 席の説明と、時間帯ごとの空きぐあい（同じ空きぐあいが続く時間帯は、まとめて出す）
+b.appendChild(el('div','meta','席は1階の10人までです。2階を開ける日は、あわせて20人までです。'+(d.floor2==='undecided'?'2階を開けるかは、まだ決まっていません。':'')));
+if(d.slots&&d.slots.length){var sl=el('div','slots'),gi=0;while(gi<d.slots.length){var gj=gi;while(gj+1<d.slots.length&&d.slots[gj+1].s===d.slots[gi].s)gj++;var st2=d.slots[gi].s;sl.appendChild(el('span','slot '+(st2==='満席'?'s-full':st2==='のこりわずか'?'s-few':'s-free'),d.slots[gi].t+'〜'+(gj+1<d.slots.length?d.slots[gj+1].t:d.close)+'　'+st2));gi=gj+1}b.appendChild(sl)}
 b.appendChild(el('div','meta','開いている時間 '+d.open+'〜'+d.close+'　みんながそろう時間 '+d.core));
 b.appendChild(el('div','meta','締切 '+d.deadline+(d.late?'（過ぎていますが、予約と取り消しはできます）':'')));
-var go=el('button','btn',d.reserved?'この時刻に変える':'この時刻で予約する');
+var go=el('button','btn',held?'この時刻に変える':'この時刻で予約する');
 var lo=toMin(d.open),hi=toMin(d.close);
-var changed=function(){if(A.v>=B.v){B.v=Math.min(hi,A.v+30);B.set()}if(d.reserved){go.className='btn'+((toHM(A.v)===d.arr&&toHM(B.v)===d.lea)?' hide':'')}};
+var changed=function(){if(A.v>=B.v){B.v=Math.min(hi,A.v+30);B.set()}if(held){go.className='btn'+((toHM(A.v)===d.arr&&toHM(B.v)===d.lea)?' hide':'')}};
 var A=stepper('到着予定',toMin(d.arr),lo,hi-30,function(){changed()});
 var B=stepper('退出予定',toMin(d.lea),lo+30,hi,function(){if(B.v<=A.v){A.v=Math.max(lo,B.v-30);A.set()}changed()});
 var steps=el('div','steps');steps.appendChild(A.el);steps.appendChild(B.el);b.appendChild(steps);
 go.onclick=function(){call({op:'reserve',day:d.id,arr:toHM(A.v),lea:toHM(B.v)})};b.appendChild(go);
-if(d.reserved){go.className='btn hide';var x=el('button','btn quiet','行けなくなったので取り消す');x.onclick=function(){call({op:'cancel',day:d.id})};b.appendChild(x)}
+if(held){go.className='btn hide';var x=el('button','btn quiet',d.waiting?'順番待ちを取り消す':'行けなくなったので取り消す');x.onclick=function(){call({op:'cancel',day:d.id})};b.appendChild(x)}
 // この日の講義：予約をした人は、出たい講義に参加の予約ができる
 if(d.lectures&&d.lectures.length){var lb=el('div','lecs');lb.appendChild(el('div','lechead','この日の講義'));
 d.lectures.slice().sort(function(a,b){return a.start<b.start?-1:a.start>b.start?1:0}).forEach(function(l){var row=el('div','lec'+(l.joined?' on':''));var lx=el('div','lectx');lx.appendChild(el('b','',l.title));
 lx.appendChild(el('span','',l.start+'〜'+l.end+(l.by?'　担当：'+l.by:'')));lx.appendChild(el('span','n',l.joined?'参加の予約ずみ（いま'+l.count+'人）':'いま'+l.count+'人が参加'));
 if(l.detail){var ld=el('details','more');ld.appendChild(el('summary','','くわしく見る'));ld.appendChild(el('p','',l.detail));lx.appendChild(ld)}
+// アンケート：講義に参加の予約があり、その日の受付を済ませた人にだけ、リンクが返ってくる
+if(l.survey&&/^https:\/\/(docs\.google\.com\/forms\/|forms\.gle\/)/.test(l.survey)){var sa=el('a','svy','アンケートに答える');sa.href=l.survey;sa.target='_blank';sa.rel='noopener';lx.appendChild(sa);if(l.signed)lx.appendChild(el('small','lecnote','このアンケートは記名です（回答に管理番号がつきます）'))}
 row.appendChild(lx);
 if(d.reserved){var lbtn=el('button','lecbtn'+(l.joined?' quiet':''),l.joined?'参加をやめる':'参加する');lbtn.onclick=function(){call({op:l.joined?'leaveLecture':'joinLecture',lecture:l.id})};row.appendChild(lbtn)}
 lb.appendChild(row)});
-if(!d.reserved)lb.appendChild(el('small','lecnote','この日に行く予約をすると、講義に参加できます。'));
+if(!d.reserved)lb.appendChild(el('small','lecnote',d.waiting?'順番待ちのあいだは、講義に参加の予約はできません。':'この日に行く予約をすると、講義に参加できます。'));
 b.appendChild(lb)}
 t.appendChild(b);box.appendChild(t)});
 if(busy)busyOn(true)}
