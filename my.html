@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="ui.css?v=23">
-<script src="log.js?v=5"></script>
+<script src="log.js?v=6"></script>
 <style>
 body{padding-bottom:24px}
 /* ネームプレートと同じ並び：紺の帯、色の線、大きな呼び名、番号 */
@@ -48,14 +48,11 @@ body{padding-bottom:24px}
 </div></header>
 <main>
 <nav class="mytabs" aria-label="マイページの中の移動"><a id="tabY" class="">予約・講義</a><a id="tabM" class="on">ネームプレート・登録</a></nav>
-<script>/* 専用リンクの鍵：アドレスから読んだら、このタブの中だけの保管場所に移し、アドレスと履歴からは消す */
-window.YumeKey=(function(){var k=new URLSearchParams((location.hash||'').replace(/^#/,'')).get('k')||'',kept=false;
-if(k){try{sessionStorage.setItem('yumeaka_mykey',k);kept=sessionStorage.getItem('yumeaka_mykey')===k}catch(e){kept=false}
-if(kept){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}}
-else{try{k=sessionStorage.getItem('yumeaka_mykey')||''}catch(e){k=''}kept=!!k}
-var h=(k&&!kept)?'#k='+encodeURIComponent(k):'';
-document.getElementById('tabY').href='yoyaku.html'+h;document.getElementById('tabM').href='my.html'+h;
-return {key:k,hash:h}})();</script>
+<script>/* ログインの鍵：この端末の中の保管場所から読む。アドレスには載せない。ないときは、ログインの画面へ動く */
+window.YumeKey=(function(){var L=null;try{L=JSON.parse(localStorage.getItem('yumeaka_login_v1')||'null')}catch(e){}
+document.getElementById('tabY').href='yoyaku.html';document.getElementById('tabM').href='my.html';
+var here=/my\.html/.test(location.pathname)?'my':'yoyaku';
+return {key:(L&&L.token)||'',hash:'',out:function(){try{localStorage.removeItem('yumeaka_login_v1')}catch(e){}location.replace('login.html?next='+here)}}})();</script>
 <div class="loading" id="load"><span class="ring"></span>登録の内容を確かめています</div>
 <div id="msg" class="note hide"></div>
 
@@ -95,7 +92,7 @@ return {key:k,hash:h}})();</script>
   </div>
 
   <a class="btn quiet" id="toYoyaku" style="text-align:center;text-decoration:none">予約・講義のページへ</a>
-  <small class="foot">このページのアドレスは、あなた専用です。ほかの人には教えないでください。</small>
+  <small class="foot">ログインしたままの端末を、ほかの人に貸さないでください。<a href="login.html">ログインの画面（ログアウトもここから）</a></small>
 </div>
 </main>
 <script src="qr1m.js?v=1"></script>
@@ -106,12 +103,13 @@ var $=function(i){return document.getElementById(i)};
 var key=(window.YumeKey&&window.YumeKey.key)||'';
 var busy=false,P=null,facing='user',stream=null,shot='',camTry=0;
 function msg(t,c){var m=$('msg');m.textContent=t||'';m.className='note '+(c||'ng')+(t?'':' hide')}
-function call(o,done){if(busy)return;busy=true;document.body.classList.add('busy');var b=new URLSearchParams();o.key=key;for(var k in o)b.set(k,o[k]);
+function call(o,done){if(busy)return;busy=true;document.body.classList.add('busy');var b=new URLSearchParams();o.token=key;for(var k in o)b.set(k,o[k]);
 fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){busy=false;document.body.classList.remove('busy');$('load').className='loading hide';done(r)})
 .catch(function(){busy=false;document.body.classList.remove('busy');$('load').className='loading hide';$('psave').disabled=false;msg('通信に失敗しました。もう一度試してください。','ng')})}
 function setFace(src){var f=$('pface');if(src){f.style.backgroundImage='url('+src+')';f.textContent=''}else{f.style.backgroundImage='';f.textContent=P?P.name.slice(0,1):''}}
 function render(r){
-if(!r.ok||!r.profile){$('body').className='hide';msg(r.message||'このリンクは使えません。','ng');return}
+if(r.auth===false&&r.login){window.YumeKey.out();return}
+if(!r.ok||!r.profile){$('body').className='hide';msg(r.message||'ログインが必要です。','ng');return}
 P=r.profile;$('body').className='';msg(r.message||'',r.cls||'ok');
 var k=P.group==='メンター'?'r-m':P.group==='運営'?'r-s':'';
 $('role').textContent=P.group;$('role').className='role '+k;$('plateIn').className='in '+k;
@@ -164,7 +162,7 @@ $('psave').onclick=function(){$('psave').disabled=true;call({op:'photo',image:sh
 if(r.saved){closeCam();render(r);setFace(shot)}else{msg(r.message||'登録できませんでした。','ng')}})};
 window.addEventListener('pagehide',stopCam);
 
-if(!key){$('load').className='loading hide';msg('このページは、あなた専用のリンクから開いてください。','ng')}else call({op:'me'},render);
+if(!key){window.YumeKey.out()}else call({op:'me'},render);
 })();
 </script>
 </body>
