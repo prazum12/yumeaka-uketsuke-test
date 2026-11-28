@@ -76,7 +76,7 @@ c.appendChild(el('p','txt','このリンクを、本人だけに送ってくだ�
 var lb=el('label','','招待リンク');lb.setAttribute('for','invUrl');c.appendChild(lb);
 var t=el('textarea');t.id='invUrl';t.readOnly=true;t.value=url;t.style.minHeight='72px';t.style.fontSize='14px';t.style.wordBreak='break-all';t.onfocus=function(){t.select()};c.appendChild(t);
 var cb=el('button','btn','リンクをコピー');cb.onclick=function(){copy(url,cb)};c.appendChild(cb);
-var body=p.name+' さんへ\n\n夢アカの予約ページに入るための、あなた専用の招待リンクです。\n\n'+url+'\n\n・リンクを開いて、「この招待で始める」を押してください。\n・そのあと、画面の案内にそって、GoogleかDiscordのアカウントを結びつけてください。次からは、それで入れます。\n・使えるのは1回だけで、期限は7日です。\n・リンクを開けないときは、ログインの画面（'+page+'）で、登録コード '+code+' を入れてください。\n・このメールは、ほかの人に見せたり、送ったりしないでください。';
+var body=p.name+' さんへ\n\n夢アカの予約ページに入るための、あなた専用の招待リンクです。\n\n'+url+'\n\n・リンクを開いて、「この招待で始める」を押してください。\n・そのあと、画面の案内にそって、自分の端末にパスキー（顔認証や指紋認証）を登録してください。次からは、それで入れます。\n・SafariやChromeなど、ふだん使っているブラウザで開いてください。\n・使えるのは1回だけで、期限は7日です。\n・リンクを開けないときは、ログインの画面（'+page+'）で、登録コード '+code+' を入れてください。\n・このメールは、ほかの人に見せたり、送ったりしないでください。';
 var ma=el('a','btn quiet','メールを書く');ma.href='mailto:?subject='+encodeURIComponent('夢アカの予約ページ：招待リンク')+'&body='+encodeURIComponent(body);ma.style.textAlign='center';ma.style.textDecoration='none';c.appendChild(ma);
 c.appendChild(el('div','txt','リンクを開けない人には、登録コードを伝えてください：'+code));
 var x=el('button','btn quiet','渡し終わったので、閉じる');x.onclick=function(){c.textContent='';c.className='card hide'};c.appendChild(x);
