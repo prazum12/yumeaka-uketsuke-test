@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<!-- このページが読み込んでよいものの指定。外部のプログラムは読み込まず、通信先はn8nの受け口だけにする -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://yasuulab-n8n.xvps.jp; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#16213e">
+<title>夢アカ ログイン（検証用）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ui.css?v=23">
+<script src="log.js?v=6"></script>
+<style>
+body{padding-bottom:24px}
+#code{letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.or{margin:16px 0 6px;font-size:13px;color:var(--ink-2);font-weight:700}
+.btn+.btn{margin-top:10px}
+</style>
+</head>
+<body>
+<header class="band"><div class="band-in">
+  <div class="mark">横須賀プログラミング"夢"アカデミー</div>
+  <div class="band-title">ログイン<small>検証用</small></div>
+</div></header>
+<main>
+<div class="loading" id="load"><span class="ring"></span>確かめています</div>
+<div id="msg" class="note hide"></div>
+
+<div class="card hide" id="formCard">
+  <h2>登録コードで入る</h2>
+  <p class="txt">運営から受け取った、あなた専用の登録コードを入れてください。使えるのは1回だけで、そのあとは、この端末にログインしたままになります。</p>
+  <label for="code">登録コード（8文字）</label>
+  <input id="code" autocomplete="off" autocapitalize="characters" placeholder="XXXX-XXXX" maxlength="12">
+  <button id="go" class="btn">ログインする</button>
+  <div class="or">ほかの方法</div>
+  <button id="google" class="btn quiet" disabled>Googleでログイン（準備中）</button>
+  <button id="discord" class="btn quiet" disabled>Discordでログイン（準備中）</button>
+  <small class="foot">登録コードがない人、なくした人、機種を変えた人は、運営に伝えてください。新しいコードを出します。</small>
+</div>
+
+<div class="card hide" id="inCard">
+  <h2>ログインしています</h2>
+  <p class="txt" id="inWho"></p>
+  <a id="toYoyaku" class="btn" href="yoyaku.html" style="text-align:center;text-decoration:none">マイページを開く</a>
+  <a id="toKanri" class="btn quiet hide" href="kanri.html" style="text-align:center;text-decoration:none;margin-top:10px">運営画面を開く</a>
+  <button id="out" class="btn quiet">ログアウトする</button>
+  <small class="foot">自分のものではない端末では、使い終わったらログアウトしてください。</small>
+</div>
+</main>
+<script>
+(function(){
+var API='https://yasuulab-n8n.xvps.jp/webhook/yumeaka-yoyaku-login-api-9d27c4';
+var STORE='yumeaka_login_v1';
+var $=function(i){return document.getElementById(i)};
+var next=new URLSearchParams(location.search).get('next')||'';
+var dest=next==='kanri'?'kanri.html':next==='my'?'my.html':'yoyaku.html';
+var busy=false;
+function load(){try{return JSON.parse(localStorage.getItem(STORE)||'null')}catch(e){return null}}
+function save(o){try{localStorage.setItem(STORE,JSON.stringify(o));return true}catch(e){return false}}
+function clear(){try{localStorage.removeItem(STORE)}catch(e){}}
+function msg(t,c){var m=$('msg');m.textContent=t||'';m.className='note '+(c||'ng')+(t?'':' hide')}
+function post(o){var b=new URLSearchParams();for(var k in o)b.set(k,o[k]);return fetch(API,{method:'POST',body:b}).then(function(x){return x.json()})}
+// GoogleとDiscordでのログインは、準備ができてから使えるようにする（それまでは「準備中」）
+function providers(p){['google','discord'].forEach(function(k){var on=!!(p&&p[k]);$(k).disabled=!on;$(k).textContent=(k==='google'?'Google':'Discord')+'でログイン'+(on?'':'（準備中）')})}
+function showForm(){$('load').className='loading hide';$('inCard').className='card hide';$('formCard').className='card'}
+function showIn(me){$('load').className='loading hide';$('formCard').className='card hide';$('inCard').className='card';$('inWho').textContent=me.name+' さん（No. '+me.no+'）として、ログインしています。';$('toKanri').className=(me.role==='運営'||me.role==='メンター')?'btn quiet':'btn quiet hide'}
+var L=load();
+if(L&&L.token){post({op:'who',token:L.token}).then(function(r){if(r&&r.ok){L.no=r.me.no;L.name=r.me.name;L.role=r.me.role;save(L);providers(r.providers);if(next){location.replace(dest);return}showIn(r.me)}else{clear();providers(r&&r.providers);showForm();msg('ログインが切れています。もう一度、入ってください。','warn')}}).catch(function(){showForm();msg('通信に失敗しました。もう一度試してください。','ng')})}
+else{showForm();post({op:'config'}).then(function(r){providers(r&&r.providers)}).catch(function(){})}
+$('go').onclick=function(){if(busy)return;var code=$('code').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase();if(code.length!==8){msg('登録コードは、8文字です。','ng');return}
+busy=true;document.body.classList.add('busy');$('go').disabled=true;msg('確かめています…','warn');
+post({op:'code',code:code}).then(function(r){busy=false;document.body.classList.remove('busy');$('go').disabled=false;
+if(!r||!r.ok||!r.token){msg((r&&r.message)||'ログインできませんでした。','ng');return}
+if(!save({token:r.token,exp:r.exp,no:r.me.no,name:r.me.name,role:r.me.role})){msg('この端末は情報を保存できない設定のため、ログインできませんでした。\nプライベートブラウズを切るか、ふだん使っているブラウザで開き直してください。','ng');return}
+$('code').value='';location.replace(dest)}).catch(function(){busy=false;document.body.classList.remove('busy');$('go').disabled=false;msg('通信に失敗しました。もう一度試してください。','ng')})};
+$('code').addEventListener('keydown',function(e){if(e.key==='Enter')$('go').click()});
+$('out').onclick=function(){var x=load();var done=function(){clear();showForm();msg('ログアウトしました。','out')};if(x&&x.token)post({op:'logout',token:x.token}).then(done).catch(done);else done()};
+$('google').onclick=$('discord').onclick=function(){msg('Google・Discordでのログインは、準備中です。いまは、登録コードで入ってください。','warn')};
+})();
+</script>
+</body>
+</html>
