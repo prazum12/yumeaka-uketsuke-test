@@ -67,15 +67,13 @@ return {key:k,hash:h}})();</script>
 
   <div class="card">
     <div class="step"><h2>登録の内容を確かめる</h2><span id="s1"></span></div>
-    <p class="txt">本名は、出欠などの正式な記録に使います。運営が登録した名前です。ネームプレートには載りません。</p>
     <p class="txt">呼び名は、ネームプレートに載る名前です。変えたい場合は、ここで直してください。</p>
-    <div class="realbox"><span>本名</span><b id="real"></b><small id="realnote"></small></div>
     <label for="name">呼び名（12文字まで）</label>
     <input id="name" maxlength="12" autocomplete="off">
     <button id="ok" class="btn">この内容で確認する</button>
   </div>
 
-  <div class="card" id="photoCard">
+  <div class="card hide" id="photoCard">
     <div class="step"><h2>顔写真を登録する</h2><span id="s2"></span></div>
     <p class="txt" id="ptxt">運営とメンターだけが見られる写真です。受付で、顔と名前を確かめるために使います。</p>
     <div class="cam hide" id="cam">
@@ -118,13 +116,12 @@ P=r.profile;$('body').className='';msg(r.message||'',r.cls||'ok');
 var k=P.group==='メンター'?'r-m':P.group==='運営'?'r-s':'';
 $('role').textContent=P.group;$('role').className='role '+k;$('plateIn').className='in '+k;
 $('pname').textContent=P.name;$('pno').textContent='No. '+P.no;
-$('real').textContent=P.real?(P.real+(P.kana?'（'+P.kana+'）':'')):'まだ登録されていません';$('realnote').textContent=P.real?'ちがうときは、運営に伝えてください。':'運営に伝えてください。';
 if(document.activeElement!==$('name'))$('name').value=P.name;
 if(r.photo)setFace(r.photo);else if(!P.hasPhoto)setFace('');
 $('s1').textContent=P.confirmedAt?'確認済み':'まだ';$('s1').className=P.confirmedAt?'done':'todo';
 $('ok').textContent=P.confirmedAt?'呼び名を直して、もう一度確認する':'この内容で確認する';
-if(P.canSelfPhoto){$('photoCard').className='card';$('s2').textContent=P.hasPhoto?'登録済み':'まだ';$('s2').className=P.hasPhoto?'done':'todo';$('shoot').textContent=P.hasPhoto?'顔写真を撮り直す':'顔写真を撮る'}
-else{$('photoCard').className='card';$('s2').textContent='';$('ptxt').textContent='顔写真は、活動日に受付で撮ります。ここでの登録は不要です。';$('shoot').className='btn hide'}
+// 顔写真は、ここでは登録も表示もしない（撮るのも見るのも、運営だけ）
+$('photoCard').className='card hide';
 $('toYoyaku').href='yoyaku.html'+((window.YumeKey&&window.YumeKey.hash)||'');plate()}
 
 // 自分のネームプレートを、紙と同じ並びで描く（91mm×55mm、300dpi相当）
