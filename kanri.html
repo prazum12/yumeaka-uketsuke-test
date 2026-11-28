@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="ui.css?v=23">
-<script src="log.js?v=5"></script>
+<script src="log.js?v=6"></script>
 </head>
 <body>
 <header class="band"><div class="band-in">
@@ -93,14 +93,14 @@ c.appendChild(tiles);
 var total=all.length||1;var bar=el('div','bar');
 [['here',G.here.length],['gone',G.gone.length],['yet',G.yet.length]].forEach(function(t){if(!t[1])return;var sgm=el('div','seg t-'+t[0]);sgm.style.width=(t[1]/total*100)+'%';bar.appendChild(sgm)});
 c.appendChild(bar);
-var sec=function(key,icon,title,list,empty){var w=el('div','sec s-'+key);w.appendChild(el('div','sechead',icon+' '+title+'　'+list.length+'人'));
+var sec=function(key,icon,title,list,empty){var w=el('div','sec s-'+key);var nLate=list.filter(function(p){return p.late}).length;w.appendChild(el('div','sechead',icon+' '+title+'　'+list.length+'人'+(nLate?'（うち未着 '+nLate+'人：到着予定から15分たっても受付なし）':'')));
 if(!list.length){w.appendChild(el('div','empty',empty));c.appendChild(w);return}
 var g=el('div','chips');list.forEach(function(p){var ch=el('div','chip wa'+(p.late?' late':''));var av=el('span','ava',p.name.slice(0,1));av.dataset.no=p.no;ch.appendChild(av);var bd=el('div');ch.appendChild(bd);
 var top=el('div','ctop');top.appendChild(el('span','cname',p.name));if(p.real)top.appendChild(el('span','creal',p.real));
 if(p.adult)top.appendChild(el('span','badge b-adult',p.group==='運営'?'運営':'メンター'));
 if(p.guest)top.appendChild(el('span','badge b-walk','ゲスト'));else if(p.walkin)top.appendChild(el('span','badge b-walk','予約なし'));
-if(p.late)top.appendChild(el('span','badge b-late','遅れ'));if(!p.hasPhoto&&!p.guest)top.appendChild(el('span','badge b-nophoto','写真まだ'));bd.appendChild(top);
-var sub=key==='yet'?(p.arr+' に来る予定'+(p.time?'（'+p.time+'）':'')):key==='here'?('到着 '+p.at+(p.time?'　予定 '+p.time:'')):(p.at+'〜'+p.out+' にいた');
+if(p.late)top.appendChild(el('span','badge b-late','未着'));if(!p.hasPhoto&&!p.guest)top.appendChild(el('span','badge b-nophoto','写真まだ'));bd.appendChild(top);
+var sub=key==='yet'?((p.arr?'到着予定 '+p.arr:'')+(p.time?'（'+p.time+'）':'')):key==='here'?('到着 '+p.at+(p.time?'　予定 '+p.time:'')):(p.at+'〜'+p.out+' にいた');
 bd.appendChild(el('div','csub','No. '+p.no+'　'+sub));g.appendChild(ch)});w.appendChild(g);c.appendChild(w)};
 sec('yet','⏳','まだ来ていない',G.yet,'全員そろっています');
 sec('here','🟢','来ている',G.here,'まだ誰も来ていません');
