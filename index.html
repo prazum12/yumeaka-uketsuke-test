@@ -248,7 +248,7 @@ if(code.length<8){note('登録コードを入れてください。');return}
 var key=randHex(32);note('登録しています…','warn');document.body.classList.add('busy');$('regbtn').disabled=true;
 post({op:'register',code:code,key:key}).then(function(r){document.body.classList.remove('busy');$('regbtn').disabled=false;
 if(!r.ok){note(r.message||'登録できませんでした。');return}
-me={device:r.device,key:key,name:r.name};
+me={device:r.device,key:key,name:r.name,no:r.no||''};
 if(!save(me)){note('この端末は情報を保存できない設定のため、登録できませんでした。\nプライベートブラウズを切るか、ふだん使っているブラウザで開き直してください。');me=null;return}
 history.replaceState(null,'',location.pathname+location.search);
 openApp()}).catch(function(){document.body.classList.remove('busy');$('regbtn').disabled=false;note('通信に失敗しました。もう一度試してください。')})};
