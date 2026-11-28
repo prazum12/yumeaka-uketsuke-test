@@ -83,7 +83,8 @@
   </div>
   <div class="list"><div class="tiphint" id="tip"></div><div class="chips" id="names"><div class="sk" style="margin:0;border:0;padding:4px"><i class="w80"></i><i class="w60"></i></div></div></div>
 
-  <button id="rosterBtn" class="btn quiet">ネームプレートを忘れた人を、名簿から選ぶ</button>
+  <button id="rosterBtn" class="btn quiet hide">ネームプレートを忘れた人を、名簿から選ぶ</button>
+  <small class="foot">ネームプレートを忘れた人には、運営が予備のネームプレートを渡します。運営画面で結びつけたあと、予備のネームプレートを読み取ってください。</small>
 
   <details>
     <summary>日付の変更・この端末について</summary>
@@ -128,7 +129,8 @@ var last='',lastAt=0,busy=false,camOn=false,L={arrived:[],notYet:[],left:[]},tab
 var mode='scan',target=null,shot='',facing='environment',PH=null;
 function photoHint(){return (target?target.who+' さんの':'')+'顔を枠に入れて、赤い丸を押す'}
 function face(src){var f=$('face');if(src){f.src=src;f.className='face';$('result').classList.add('has-face')}else{f.removeAttribute('src');f.className='face hide';$('result').classList.remove('has-face')}}
-function setTarget(r){if(r&&r.no&&!r.guest){target={no:r.no,who:r.who||''};$('shoot').className='btn quiet';$('shoot').textContent=r.hasPhoto?'顔写真を撮り直す':'顔写真を撮る（まだ登録されていません）'}else{target=null;$('shoot').className='btn quiet hide'}}
+var PHOTO=false;
+function setTarget(r){if(r&&r.me)PHOTO=!!r.me.photoOn;if(r&&r.no&&!r.guest&&PHOTO){target={no:r.no,who:r.who||''};$('shoot').className='btn quiet';$('shoot').textContent=r.hasPhoto?'顔写真を撮り直す':'顔写真を撮る（まだ登録されていません）'}else{target=null;$('shoot').className='btn quiet hide'}}
 function scanMode(){mode='scan';$('shutterWrap').className='shutter hide';$('confirm').className='two hide';$('hint').textContent='ネームプレートのQRコードを枠に入れる';
 /* 内側のカメラで撮ったあとは、QRコードを読むために外側のカメラへ戻す */
 if(facing==='user'){facing='environment';startCam()}}
@@ -145,8 +147,8 @@ function waiting(){show('idle','','準備しています','名簿と予約を確
 function names(){var box=$('names');box.textContent='';var a=L[tab]||[];var k=tab==='arrived'?'here':tab==='left'?'gone':'yet';
 box.parentNode.className='list sec s-'+k;
 if(!a.length){box.appendChild(el('div','empty',tab==='notYet'?'全員そろっています':tab==='arrived'?'まだ誰も来ていません':'まだ誰も帰っていません'));return}
-var nos=L[tab+'No']||[];var can=tab!=='left';
-$('tip').textContent=can?(tab==='notYet'?'ネームプレートを忘れた人は、名前を押すと到着を記録できます':'名前を押すと、ネームプレートなしで退出を記録できます'):'';
+var nos=L[tab+'No']||[];var can=tab==='arrived';
+$('tip').textContent=can?(tab==='notYet'?'ネームプレートを忘れた人には、運営が予備のネームプレートを渡します':'名前を押すと、ネームプレートなしで退出を記録できます'):'';
 a.forEach(function(t,i){var m=/^(.*)（(.*)）$/.exec(t);var nm=m?m[1]:t;var c=el('div','chip'+(can&&nos[i]?' tapme':''));c.appendChild(el('div','cname',nm));if(m)c.appendChild(el('div','csub',m[2]));
 if(can&&nos[i]){c.setAttribute('role','button');c.tabIndex=0;c.onclick=function(){ask(nos[i],nm,tab==='notYet'?'in':'out')}}box.appendChild(c)})}
 function closeSheet(){$('sheet').className='sheet hide';$('sheetIn').textContent=''}
@@ -160,7 +162,7 @@ if(!/^G-/.test(no))post({op:'face',device:me.device,key:me.key,no:no}).then(func
 function tapIn(no,want){if(busy)return;busy=true;document.body.classList.add('busy');
 post({op:'tap',device:me.device,key:me.key,day:$('day').value,no:no,want:want}).then(function(r){busy=false;document.body.classList.remove('busy');
 if(r.auth===false){stopCam();show('ng','不可','この端末では受付できません',r.message);return}
-lists(r);face(r.photo||'');setTarget(r);showMsg(r.message+((r.real&&r.message)?'\n本名：'+r.real:''),r.cls||'',true);window.scrollTo({top:0,behavior:'smooth'})}).catch(function(){busy=false;document.body.classList.remove('busy');show('ng','不可','通信に失敗しました','もう一度、名前を押してください。',true)})}
+lists(r);face(r.photo||'');setTarget(r);showMsg(r.message,r.cls||'',true);window.scrollTo({top:0,behavior:'smooth'})}).catch(function(){busy=false;document.body.classList.remove('busy');show('ng','不可','通信に失敗しました','もう一度、名前を押してください。',true)})}
 function openRoster(){var box=$('sheetIn');box.textContent='';$('sheet').className='sheet';box.appendChild(el('div','who','名簿から選ぶ'));
 box.appendChild(el('div','what','ネームプレートを忘れた人の名前を押してください'));
 var ld=el('div','loading');ld.appendChild(el('span','ring'));ld.appendChild(document.createTextNode('名簿を読み込んでいます'));box.appendChild(ld);
@@ -189,7 +191,7 @@ post({op:code?'scan':'open',device:me.device,key:me.key,day:$('day').value,code:
 if(r.auth===false){stopCam();show('ng','不可','この端末では受付できません',r.message);return}
 lists(r);$('dayLabel').textContent=dayText($('day').value)||'検証用';
 if(!code){idle();return}
-face(r.photo||'');setTarget(r);showMsg(r.message+((r.real&&r.message)?'\n本名：'+r.real:''),r.cls||'',true)}).catch(function(){busy=false;document.body.classList.remove('busy');show('ng','不可','通信に失敗しました','もう一度かざしてください。',true)})}
+face(r.photo||'');setTarget(r);showMsg(r.message,r.cls||'',true)}).catch(function(){busy=false;document.body.classList.remove('busy');show('ng','不可','通信に失敗しました','もう一度かざしてください。',true)})}
 
 function tick(my){if(!camOn||my!==camTry)return;var v=$('v');
 if(v.readyState===v.HAVE_ENOUGH_DATA){var c=$('c');c.width=v.videoWidth;c.height=v.videoHeight;var x=c.getContext('2d');x.drawImage(v,0,0);
