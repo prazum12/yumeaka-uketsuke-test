@@ -51,7 +51,8 @@ body{padding-bottom:24px}
   </div>
   <div id="pkSec" class="hide">
     <h2>パスキーでログイン</h2>
-    <p class="txt">この端末に登録したパスキーで入ります。顔、指、または端末の暗証番号で確かめます。</p>
+    <p class="txt">この端末に登録したパスキーを、顔、指、または端末の暗証番号で確かめて入ります。Discordを使わない人は、この方法で入ります。Discordを使っている人も、使えます。</p>
+    <p class="txt">はじめて使う人は、先に登録が要ります。Discordを使わない人は、運営から届いた招待リンクを開いて登録します。Discordを使っている人は、Discordで入ったあとに、この画面を開くと登録できます。</p>
     <button id="passkey" class="btn" type="button">パスキーでログイン</button>
   </div>
   <div id="oauthSec" class="hide">
@@ -75,7 +76,7 @@ body{padding-bottom:24px}
     <p class="txt hide" id="pkHave"></p>
     <button id="pkAdd" class="btn quiet" type="button"></button>
     <button id="pkDel" class="btn quiet hide" type="button"></button>
-    <small class="foot" id="pkFoot">パスキーは、パスワードのかわりに、端末の顔認証や指紋認証で入るしくみです。覚えるものはありません。登録は、自分の端末だけで行ってください。</small>
+    <small class="foot" id="pkFoot">パスキーは、パスワードのかわりに、端末の顔認証や指紋認証で入るしくみです。覚えるものはありません。Discordを使わない人は、これで入ります。Discordを使っている人も、登録しておけます。登録は、自分の端末だけで行ってください。</small>
   </div>
   <div id="linkBox" class="hide">
     <div class="or" id="linkOr">次から、GoogleやDiscordで入れるようにする</div>
@@ -161,7 +162,7 @@ $('pkOr').textContent=TEMP?'続けて使うために':'パスキーで入れる�
 var h=$('pkHave');h.className=PK.n?'txt':'txt hide';h.textContent=PK.n?('登録してあるパスキー：'+PK.n+'個（'+PK.list.map(function(x){return (x.dev||'端末')+(when(x.at)?'・'+when(x.at).split(' ')[0]:'')}).join('、')+'）'):'';
 var a=$('pkAdd');a.className=(TEMP&&!PK.n)?'btn':'btn quiet';a.textContent=PK.n?'この端末にも、パスキーを登録する':'この端末に、パスキーを登録する';a.disabled=!PV.passkey||busy;
 var d=$('pkDel');d.className=(PK.n&&!TEMP)?'btn quiet':'btn quiet hide';d.textContent=armPk?'もう一度押すと、登録してあるパスキーをすべて消します':'登録してあるパスキーを、すべて消す'}
-function pkErr(e,reg){var n=e&&e.name;if(n==='NotAllowedError'||n==='AbortError')return 'パスキーの確認を、取りやめました。もう一度試すときは、ボタンを押し直してください。';if(n==='InvalidStateError')return 'この端末には、もうパスキーが登録されています。';if(n==='NotSupportedError')return 'この端末は、パスキーに対応していません。';if(n==='SecurityError')return 'このページでは、パスキーを使えません。';return reg?'パスキーを登録できませんでした。もう一度試してください。':'パスキーで確かめられませんでした。もう一度試してください。'}
+function pkErr(e,reg){var n=e&&e.name;if(n==='NotAllowedError'||n==='AbortError')return reg?'パスキーの登録を、取りやめました。もう一度試すときは、ボタンを押し直してください。':'パスキーで確かめられませんでした。\nこの端末にパスキーを登録していない人は、先に登録が要ります。Discordを使わない人は、運営から届いた招待リンクを開いてください。Discordを使っている人は、「Discordでログイン」で入ったあとに、この画面で登録できます。';if(n==='InvalidStateError')return 'この端末には、もうパスキーが登録されています。';if(n==='NotSupportedError')return 'この端末は、パスキーに対応していません。';if(n==='SecurityError')return 'このページでは、パスキーを使えません。';return reg?'パスキーを登録できませんでした。もう一度試してください。':'パスキーで確かめられませんでした。もう一度試してください。'}
 function showForm(){$('load').className='loading hide';$('invCard').className='card hide';$('inCard').className='card hide';$('formCard').className='card'}
 function showIn(me){$('load').className='loading hide';$('invCard').className='card hide';$('formCard').className='card hide';$('inCard').className='card';$('inWho').textContent=me.name+' さん（No. '+me.no+'）として、ログインしています。';$('toYoyaku').href=destOf(next);$('toKanri').className=(next!=='kanri'&&(me.role==='運営'||me.role==='メンター'))?'btn quiet':'btn quiet hide';links()}
 // ふだんの始まり。note があれば、画面を出したあとに、その知らせを出す
