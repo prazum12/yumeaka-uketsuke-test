@@ -8,7 +8,7 @@ var NAMES={open:'受付の画面を開く',scan:'QRを読み取る',tap:'名前�
 var page=(location.pathname.split('/').pop()||'index.html');
 var SRC={'index.html':'受付の画面','kanri.html':'運営の画面','my.html':'マイページ（登録）','yoyaku.html':'マイページ（予約）'}[page]||'受付の画面';
 var who='';
-function dev(){try{var m=JSON.parse(localStorage.getItem('yumeaka_uketsuke_v1')||'null');return m&&m.name?m.name+'（'+m.device+'）':''}catch(e){return ''}}
+function dev(){try{var m=JSON.parse(localStorage.getItem('yumeaka_uketsuke_v1')||'null');return m&&m.name?m.name+'（'+(m.no||m.device)+'）':''}catch(e){return ''}}
 var F=window.fetch?window.fetch.bind(window):null;
 function send(op,res,msg){try{var b=new URLSearchParams();b.set('src',SRC);b.set('who',who||((page==='index.html'||page==='kanri.html'||page==='')?dev():''));b.set('op',String(op).slice(0,50));b.set('res',res);b.set('msg',String(msg||'').slice(0,300));b.set('ua',(navigator.userAgent||'').slice(0,140));
 if(navigator.sendBeacon){navigator.sendBeacon(LOG,b)}else if(F){F(LOG,{method:'POST',body:b,keepalive:true}).catch(function(){})}}catch(e){}}
@@ -25,7 +25,7 @@ if(op==='editLecture'||op==='editDay'||op==='stopDay')extra=o.body.get('target')
 if(op==='photo'&&page!=='index.html')extra='';
 var label=(NAMES[op]||op)+(extra?'（'+extra+'）':'');
 p.then(function(x){return x.clone().json()}).then(function(r){
-if(r&&r.profile&&r.profile.name)who=r.profile.name+'（'+r.profile.no+'）';else if(r&&r.name&&r.no)who=r.name+'（'+r.no+'）';
+if(r&&r.me&&r.me.name&&r.me.no)who=r.me.name+'（'+r.me.no+'）';else if(r&&r.profile&&r.profile.name)who=r.profile.name+'（'+r.profile.no+'）';else if(r&&r.name&&r.no)who=r.name+'（'+r.no+'）';
 var bad=(!r||r.ok===false||r.auth===false||r.cls==='ng');
 send(label,(r&&r.confirm)?'確認中':(bad?'断った':'成功'),(r&&r.confirm&&r.confirm.message)||(r&&r.message)||'');
 }).catch(function(e){send(label,'失敗','通信か、返事の読み取りに失敗：'+String((e&&e.message)||e))});
