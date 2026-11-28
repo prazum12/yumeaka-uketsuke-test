@@ -72,7 +72,7 @@ var P=null;
 function faces(){if(!P)return;Array.prototype.forEach.call(document.querySelectorAll('.ava'),function(a){var s=P[a.dataset.no];if(s){a.style.backgroundImage='url('+s+')';a.className='ava has'}})}
 function loadFaces(){var b=new URLSearchParams();b.set('op','photos');b.set('device',me.device);b.set('key',me.key);fetch(API,{method:'POST',body:b}).then(function(x){return x.json()}).then(function(r){if(r&&r.photos){P=r.photos;faces()}}).catch(function(){})}
 function render(r){$('load').className='loading hide';setTimeout(function(){if(P)faces();else loadFaces()},0);
-$('who').textContent=r.me.name+' さんの端末'+(r.me.isAdmin?'':'（リーダーズ用の表示）');
+$('who').textContent=r.me.name+' さんの端末'+(r.me.isAdmin?'':'（メンター用の表示）');
 $('nav').className='pills';$('foot').className='';$('sheet').href=r.sheetUrl;
 $('tDevices').className=r.me.isAdmin?'':'hide';
 var D=$('days');D.textContent='';
@@ -116,7 +116,7 @@ var pt=el('table','ptab');r.people.forEach(function(p){var tr=el('tr');var a=el(
 if(i===1&&p.hasPhoto&&r.me.isAdmin){var k=el('button','act quiet','写真を消す');k.style.display='block';k.style.marginTop='6px';k.onclick=function(){if(k.dataset.sure){call({op:'removePhoto',target:p.no})}else{k.dataset.sure='1';k.className='act warn';k.textContent='本当に消す（戻せません）';setTimeout(function(){delete k.dataset.sure;k.className='act quiet';k.textContent='写真を消す'},6000)}};td.appendChild(k)}
 tr.appendChild(td)});pt.appendChild(tr)});
 pc.appendChild(pt);pc.appendChild(el('small','foot','運営とメンターは、Discordの「自分の登録を確かめる」ボタンから、本人が確認と顔写真の登録をします。メンバーの顔写真は、活動日に受付で撮ります。'+(r.me.isAdmin?'退会・修了した人の顔写真は「写真を消す」で消します。消した写真は元に戻せません。':'')));Q.appendChild(pc)}
-// 講義・活動日：これからの講義を見る、講義を足す、活動日を足す（活動日はイトナブ(講師)だけ）
+// 講義・活動日：これからの講義を見る、講義を足す、活動日を足す（活動日は運営だけ）
 var PL=$('plan');var keep={};Array.prototype.forEach.call(PL.querySelectorAll('input,select,textarea'),function(x){if(x.id)keep[x.id]=x.value});PL.textContent='';
 function fld(parent,label,node){var l=el('label','',label);l.setAttribute('for',node.id);parent.appendChild(l);parent.appendChild(node);return node}
 function inp(id,type,val){var x=el(type==='textarea'?'textarea':'input');x.id=id;if(type!=='textarea')x.type=type;x.value=keep[id]!==undefined?keep[id]:(val||'');return x}
@@ -149,7 +149,7 @@ fld(dc,'詳細（なくてもよい）',inp('dDetail','textarea'));
 var db=el('button','btn','この内容で活動日を足す');db.id='dGo';db.onclick=function(){var o={title:$('dTitle').value,open:$('dOpen').value,close:$('dClose').value,coreStart:$('dCs').value,coreEnd:$('dCe').value,detail:$('dDetail').value};if($('dEdit').value){o.op='editDay';o.target=$('dEdit').value}else{o.op='addDay';o.date=$('dDate').value}plan(o,['dDate','dDetail','dEdit'])};dc.appendChild(db);
 var dcn=el('button','btn quiet hide','直すのをやめる');dcn.id='dCancel';dcn.onclick=function(){['dDate','dDetail','dEdit'].forEach(function(i){$(i).value=''});load()};dc.appendChild(dcn);
 if(de.value){$('dDate').disabled=true;db.textContent='この内容で活動日を直す';dh.textContent='活動日を直す（'+de.value+'）';dcn.className='btn quiet'}
-dc.appendChild(el('small','','締切は、足すときに自動で3日前になります（直しても変わりません）。日付は直せません。活動日を足せるのは、イトナブ(講師)のロールがある人だけです。'));PL.appendChild(dc)}
+dc.appendChild(el('small','','締切は、足すときに自動で3日前になります（直しても変わりません）。日付は直せません。活動日を足せるのは、名簿の役割が「運営」の人だけです。'));PL.appendChild(dc)}
 var V=$('devices');V.textContent='';
 if(r.devices){var c=el('div','card');c.appendChild(el('h2','','受付に使える端末'));var t=el('table');
 r.devices.forEach(function(x){var tr=el('tr');tr.appendChild(el('td','',x.name+(x.mine?'（この端末）':'')));tr.appendChild(el('td','',x.id));tr.appendChild(el('td','',x.at?x.at.slice(0,16):''));
